@@ -14,12 +14,12 @@ export const env = {
   nodeEnv: required('NODE_ENV', 'development'),
   isProduction: process.env.NODE_ENV === 'production',
 
-  databaseUrl: required('DATABASE_URL'),
+  databaseUrl: required('DATABASE_URL', 'postgresql://postgres.qmimydfoaoktuloqggsu:Nokia%21%21%211976%21%21%21%40@aws-0-ap-southeast-2.pooler.supabase.com:6543/postgres?pgbouncer=true'),
 
   jwt: {
-    secret: required('JWT_SECRET'),
+    secret: required('JWT_SECRET', 'MySuperSecretExchangeKey123'),
     expiresIn: required('JWT_EXPIRES_IN', '8h'),
-    refreshSecret: required('JWT_REFRESH_SECRET'),
+    refreshSecret: required('JWT_REFRESH_SECRET', 'MySuperSecretExchangeRefreshKey123'),
     refreshExpiresIn: required('JWT_REFRESH_EXPIRES_IN', '7d'),
   },
 
