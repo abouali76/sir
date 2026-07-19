@@ -1,0 +1,197 @@
+// ============================================
+// Sarrafa System - Database Schema (SQL Server)
+// ============================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+// Enums are not natively supported by Prisma for SQL Server.
+// We will use String fields in models instead.
+// Valid values for RoleName: "ADMIN", "EMPLOYEE"
+// Valid values for TransactionType: "BUY", "SELL"
+// Valid values for AuditAction: "LOGIN", "LOGOUT", "LOGIN_FAILED", "PRICE_UPDATE", "TRANSACTION_CREATE", "TRANSACTION_UPDATE", "TRANSACTION_DELETE", "USER_CREATE", "USER_UPDATE", "USER_DELETE", "SETTINGS_UPDATE"
+
+// ============================================
+// USERS & ROLES
+// ============================================
+
+model Role {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique  // Was RoleName
+  description String?  
+  users       User[]
+  createdAt   DateTime @default(now())
+
+  @@map("roles")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique 
+  fullName     String   
+  passwordHash String   
+  roleId       Int
+  role         Role     @relation(fields: [roleId], references: [id])
+  isActive     Boolean  @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  transactions      Transaction[]        @relation("EmployeeTransactions")
+  deletedTransactions Transaction[]      @relation("DeletedByUser")
+  exchangeRates     ExchangeRate[]
+  auditLogs         AuditLog[]
+
+  @@index([username])
+  @@index([roleId])
+  @@map("users")
+}
+
+// ============================================
+// EXCHANGE RATES
+// ============================================
+
+model ExchangeRate {
+  id         Int      @id @default(autoincrement())
+  buyPrice   Float   // سعر شراء الدولار (الذي يدفعه المكتب)
+  sellPrice  Float   // سعر بيع الدولار (الذي يستلمه المكتب)
+  isActive   Boolean  @default(true)
+  setById    Int
+  setBy      User     @relation(fields: [setById], references: [id])
+  createdAt  DateTime @default(now())
+
+  transactions Transaction[]
+
+  @@index([isActive])
+  @@index([createdAt])
+  @@map("exchange_rates")
+}
+
+// ============================================
+// CUSTOMERS
+// ============================================
+
+model Customer {
+  id          Int      @id @default(autoincrement())
+  fullName    String?  
+  phone       String?  
+  createdAt   DateTime @default(now())
+
+  transactions Transaction[]
+
+  @@index([phone])
+  @@map("customers")
+}
+
+// ============================================
+// TRANSACTIONS (البيع والشراء)
+// ============================================
+
+model Transaction {
+  id              Int             @id @default(autoincrement())
+  type            String           // Was TransactionType
+  customerId      Int?
+  customer        Customer?       @relation(fields: [customerId], references: [id])
+  customerName    String?          // نسخة نصية وقت العملية (اختياري)
+  usdAmount       Float          // عدد الدولارات
+  unitPrice       Float          // سعر الوحدة وقت العملية
+  iqdAmount       Float          // المبلغ بالدينار
+  profit          Float         @default(0)  // الربح المحتسب (لعمليات البيع فقط)
+  costBasisAvg    Float?         // متوسط التكلفة وقت البيع (لعمليات البيع)
+  exchangeRateId  Int?
+  exchangeRate    ExchangeRate?   @relation(fields: [exchangeRateId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  notes           String?         
+  employeeId      Int
+  employee        User            @relation("EmployeeTransactions", fields: [employeeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  isDeleted       Boolean         @default(false)
+  deletedById     Int?
+  deletedBy       User?           @relation("DeletedByUser", fields: [deletedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  deletedAt       DateTime?
+  transactionDate DateTime        @default(now())
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([type])
+  @@index([transactionDate])
+  @@index([employeeId])
+  @@index([isDeleted])
+  @@map("transactions")
+}
+
+// ============================================
+// TREASURY (الخزينة)
+// ============================================
+
+model Treasury {
+  id           Int      @id @default(autoincrement())
+  usdBalance   Float  @default(0) 
+  iqdBalance   Float  @default(0) 
+  // متوسط تكلفة الدولار الحالي في الخزينة (Weighted Average Cost)
+  avgCostPrice Float  @default(0) 
+  updatedAt    DateTime @updatedAt
+
+  @@map("treasury")
+}
+
+// ============================================
+// PROFIT HISTORY (سجل الأرباح اليومي المجمّع)
+// ============================================
+
+model ProfitHistory {
+  id           Int      @id @default(autoincrement())
+  date         DateTime 
+  totalProfit  Float  @default(0) 
+  totalBuyUsd  Float  @default(0) 
+  totalSellUsd Float  @default(0) 
+  buyCount     Int      @default(0)
+  sellCount    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([date])
+  @@index([date])
+  @@map("profit_history")
+}
+
+// ============================================
+// AUDIT LOGS
+// ============================================
+
+model AuditLog {
+  id        Int         @id @default(autoincrement())
+  userId    Int?
+  user      User?       @relation(fields: [userId], references: [id])
+  action    String       // Was AuditAction
+  details   String?     
+  ipAddress String?     
+  userAgent String?     
+  createdAt DateTime    @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ============================================
+// SETTINGS
+// ============================================
+
+model Setting {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique 
+  value     String   
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}

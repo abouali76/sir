@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>إعدادات السعر - نظام الصيرفة</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div id="app-shell"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/layout.js"></script>
+  <script>
+    (async function init() {
+      const me = await renderLayout('rate', 'إعدادات سعر الصرف');
+      if (!me) return;
+      if (me.role !== 'ADMIN') {
+        document.getElementById('pageBody').innerHTML = `<div class="error-msg show">هذه الصفحة مخصصة للمدير فقط</div>`;
+        return;
+      }
+
+      const body = document.getElementById('pageBody');
+      body.innerHTML = `
+        <div class="panel" style="max-width:480px;">
+          <div class="panel-header"><h3>تحديد سعر جديد</h3></div>
+          <div id="currentRateBox" style="margin-bottom:16px;"></div>
+          <div class="error-msg" id="formError"></div>
+          <div class="success-msg" id="formSuccess"></div>
+          <form id="rateForm">
+            <div style="display:flex; gap:16px; margin-bottom: 12px;">
+              <div class="form-group" style="flex:1; margin-bottom: 0;">
+                <label>سعر الشراء (لكل 100 دولار)</label>
+                <input type="number" id="buyPrice100" step="0.01" placeholder="مثال: 150000" />
+              </div>
+              <div class="form-group" style="flex:1; margin-bottom: 0;">
+                <label>سعر الشراء (للدولار الواحد)</label>
+                <input type="number" id="buyPrice" step="0.01" required placeholder="مثال: 1500" />
+              </div>
+            </div>
+            
+            <div style="display:flex; gap:16px; margin-bottom: 16px;">
+              <div class="form-group" style="flex:1; margin-bottom: 0;">
+                <label>سعر البيع (لكل 100 دولار)</label>
+                <input type="number" id="sellPrice100" step="0.01" placeholder="مثال: 150500" />
+              </div>
+              <div class="form-group" style="flex:1; margin-bottom: 0;">
+                <label>سعر البيع (للدولار الواحد)</label>
+                <input type="number" id="sellPrice" step="0.01" required placeholder="مثال: 1505" />
+              </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">حفظ السعر الجديد</button>
+          </form>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h3>سجل تغييرات الأسعار</h3></div>
+          <div class="table-wrap" id="historyContainer"><div class="loading">جاري التحميل...</div></div>
+        </div>
+      `;
+
+      async function loadCurrent() {
+        try {
+          const { data } = await api.get('/exchange-rates/current');
+          document.getElementById('currentRateBox').innerHTML =
+            `<div class="success-msg show">السعر الحالي — شراء: <strong>${formatMoney(data.buyPrice)}</strong> | بيع: <strong>${formatMoney(data.sellPrice)}</strong></div>`;
+        } catch {
+          document.getElementById('currentRateBox').innerHTML =
+            `<div class="error-msg show">لا يوجد سعر نشط حاليًا</div>`;
+        }
+      }
+
+      async function loadHistory() {
+        const container = document.getElementById('historyContainer');
+        try {
+          const { data } = await api.get('/exchange-rates/history');
+          if (data.length === 0) {
+            container.innerHTML = `<div class="empty-state">لا يوجد سجل بعد</div>`;
+            return;
+          }
+          container.innerHTML = `
+            <table>
+              <thead><tr><th>شراء</th><th>بيع</th><th>الحالة</th><th>بواسطة</th><th>التاريخ</th><th>إجراء</th></tr></thead>
+              <tbody>
+                ${data.map((r) => `
+                  <tr>
+                    <td>${formatMoney(r.buyPrice)}</td>
+                    <td>${formatMoney(r.sellPrice)}</td>
+                    <td><span class="badge ${r.isActive ? 'badge-active' : 'badge-inactive'}">${r.isActive ? 'نشط' : 'قديم'}</span></td>
+                    <td>${r.setBy.fullName}</td>
+                    <td>${formatDate(r.createdAt)}</td>
+                    <td style="display: flex; gap: 5px;">
+                      <button class="btn btn-primary btn-sm" onclick="toggleRateActive(${r.id})">
+                        ${r.isActive ? 'جعل قديم' : 'تفعيل'}
+                      </button>
+                      <button class="btn btn-danger btn-sm" onclick="deleteRate(${r.id})">حذف</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+        } catch (err) {
+          container.innerHTML = `<div class="error-msg show">${err.message}</div>`;
+        }
+      }
+
+      window.deleteRate = async (id) => {
+        if (!confirm('هل أنت متأكد من حذف هذا السعر؟')) return;
+        try {
+          await api.delete('/exchange-rates/' + id);
+          alert('تم الحذف بنجاح');
+          loadHistory();
+        } catch (err) {
+          alert(err.message || 'حدث خطأ أثناء الحذف');
+        }
+      };
+
+      document.getElementById('buyPrice100').addEventListener('input', function() {
+        if (this.value) {
+          document.getElementById('buyPrice').value = (parseFloat(this.value) / 100).toFixed(2);
+        } else {
+          document.getElementById('buyPrice').value = '';
+        }
+      });
+      document.getElementById('sellPrice100').addEventListener('input', function() {
+        if (this.value) {
+          document.getElementById('sellPrice').value = (parseFloat(this.value) / 100).toFixed(2);
+        } else {
+          document.getElementById('sellPrice').value = '';
+        }
+      });
+
+      async function toggleRateActive(id) {
+        if(!confirm('هل أنت متأكد من تغيير حالة هذا السعر؟')) return;
+        try {
+          const { message } = await api.patch(`/exchange-rates/${id}/toggle-active`);
+          alert(message);
+          loadHistory();
+          loadCurrent();
+        } catch (err) {
+          alert(err.response?.data?.message || 'حدث خطأ');
+        }
+      }
+
+      document.getElementById('rateForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formError = document.getElementById('formError');
+        const formSuccess = document.getElementById('formSuccess');
+        formError.classList.remove('show');
+        formSuccess.classList.remove('show');
+
+        try {
+          await api.post('/exchange-rates', {
+            buyPrice: parseFloat(document.getElementById('buyPrice').value),
+            sellPrice: parseFloat(document.getElementById('sellPrice').value),
+          });
+          formSuccess.textContent = 'تم تحديث السعر بنجاح';
+          formSuccess.classList.add('show');
+          document.getElementById('rateForm').reset();
+          loadCurrent();
+          loadHistory();
+        } catch (err) {
+          formError.textContent = err.message;
+          formError.classList.add('show');
+        }
+      });
+
+      loadCurrent();
+      loadHistory();
+    })();
+  </script>
+</body>
+</html>
