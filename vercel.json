@@ -3,33 +3,16 @@
   "builds": [
     {
       "src": "api/index.ts",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["public/**"]
+      }
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
+      "src": "/(.*)",
       "dest": "api/index.ts"
-    },
-    {
-      "src": "/css/(.*)",
-      "dest": "/public/css/$1"
-    },
-    {
-      "src": "/js/(.*)",
-      "dest": "/public/js/$1"
-    },
-    {
-      "src": "/pages/(.*)",
-      "dest": "/public/pages/$1"
-    },
-    {
-      "src": "/index.html",
-      "dest": "/public/index.html"
-    },
-    {
-      "src": "/",
-      "dest": "/public/index.html"
     }
   ]
 }
