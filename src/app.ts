@@ -25,7 +25,7 @@ export function createApp(): Application {
   // ===== الأمان =====
   app.use(
     helmet({
-      contentSecurityPolicy: env.isProduction ? undefined : false, // تسهيل التطوير المحلي
+      contentSecurityPolicy: false, // تعطيل سياسة الأمان للسماح بالنصوص البرمجية المدمجة (inline scripts)
     })
   );
   app.use(
