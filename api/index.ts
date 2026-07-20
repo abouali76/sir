@@ -1,11 +1,11 @@
+import { Request, Response } from 'express';
 import { createApp } from '../src/app';
 import { connectDatabase } from '../src/config/database';
 
 const app = createApp();
-
 let isConnected = false;
 
-app.use(async (req, res, next) => {
+export default async function handler(req: Request, res: Response) {
   if (!isConnected) {
     try {
       await connectDatabase();
@@ -14,7 +14,5 @@ app.use(async (req, res, next) => {
       console.error('Database connection failed:', err);
     }
   }
-  next();
-});
-
-export default app;
+  return app(req, res);
+}

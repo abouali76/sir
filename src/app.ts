@@ -30,7 +30,7 @@ export function createApp(): Application {
   );
   app.use(
     cors({
-      origin: env.clientUrl,
+      origin: true,
       credentials: true,
     })
   );
@@ -50,7 +50,12 @@ export function createApp(): Application {
   );
 
   // ===== الملفات الثابتة (الواجهة الأمامية) =====
-  app.use(express.static(path.join(__dirname, '../public')));
+  const publicDir = path.join(process.cwd(), 'public');
+  app.use(express.static(publicDir));
+
+  app.get('/', (_req, res) => {
+    res.sendFile(path.join(publicDir, 'index.html'));
+  });
 
   // ===== فحص الصحة =====
   app.get('/api/health', (_req, res) => {
