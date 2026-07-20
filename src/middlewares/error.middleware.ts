@@ -31,7 +31,7 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
       message = 'مرجع غير صالح (Foreign Key)';
     } else {
       statusCode = 400;
-      message = 'خطأ في العملية على قاعدة البيانات';
+      message = `خطأ في العملية على قاعدة البيانات (${err.code})`;
     }
   } else if (err instanceof Error) {
     message = env.isProduction ? message : err.message;
@@ -46,7 +46,7 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
 
   res.status(statusCode).json({
     success: false,
-    message,
+    message: `${message} - ${err instanceof Error ? err.message : String(err)}`,
     ...(details ? { details } : {}),
     ...(env.isProduction ? {} : { stack: err instanceof Error ? err.stack : undefined }),
   });
