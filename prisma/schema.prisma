@@ -135,12 +135,14 @@ model Transaction {
 // ============================================
 
 model Treasury {
-  id           Int      @id @default(autoincrement())
-  usdBalance   Float  @default(0) 
-  iqdBalance   Float  @default(0) 
+  id              Int      @id @default(autoincrement())
+  usdBalance      Float    @default(0) 
+  iqdBalance      Float    @default(0) 
+  vaultUsdBalance Float    @default(0)
+  vaultIqdBalance Float    @default(0)
   // متوسط تكلفة الدولار الحالي في الخزينة (Weighted Average Cost)
-  avgCostPrice Float  @default(0) 
-  updatedAt    DateTime @updatedAt
+  avgCostPrice    Float    @default(0) 
+  updatedAt       DateTime @updatedAt
 
   @@map("treasury")
 }

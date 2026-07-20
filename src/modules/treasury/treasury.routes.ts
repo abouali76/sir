@@ -11,5 +11,7 @@ router.get('/balance', treasuryController.getBalance);
 router.get('/dashboard', treasuryController.getDashboard);
 router.post('/add-funds', authorize("ADMIN"), treasuryController.addFunds);
 router.post('/remove-funds', authorize("ADMIN"), treasuryController.removeFunds);
+router.post('/vault/add-funds', authorize("ADMIN"), treasuryController.addVaultFunds);
+router.post('/vault/remove-funds', authorize("ADMIN"), treasuryController.removeVaultFunds);
 
 export default router;

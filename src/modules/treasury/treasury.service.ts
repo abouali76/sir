@@ -68,6 +68,68 @@ export async function removeFunds(usdAmount: number, iqdAmount: number, removedB
   return treasury;
 }
 
+export async function addVaultFunds(usdAmount: number, iqdAmount: number, addedById: number, ipAddress?: string) {
+  let treasury = await prisma.treasury.findFirst();
+  
+  if (!treasury) {
+    treasury = await prisma.treasury.create({
+      data: {
+        usdBalance: 0,
+        iqdBalance: 0,
+        vaultUsdBalance: usdAmount,
+        vaultIqdBalance: iqdAmount,
+        avgCostPrice: 0
+      }
+    });
+  } else {
+    treasury = await prisma.treasury.update({
+      where: { id: treasury.id },
+      data: {
+        vaultUsdBalance: Number(treasury.vaultUsdBalance) + Number(usdAmount),
+        vaultIqdBalance: Number(treasury.vaultIqdBalance) + Number(iqdAmount)
+      }
+    });
+  }
+
+  await prisma.auditLog.create({
+    data: {
+      userId: addedById,
+      action: "SETTINGS_UPDATE",
+      details: `إضافة أموال للخزنة الرئيسية: ${usdAmount} USD, ${iqdAmount} IQD`,
+      ipAddress
+    }
+  });
+
+  return treasury;
+}
+
+export async function removeVaultFunds(usdAmount: number, iqdAmount: number, removedById: number, ipAddress?: string) {
+  let treasury = await prisma.treasury.findFirst();
+  
+  if (!treasury) {
+    throw new Error("لا يوجد رصيد في الخزنة للسحب منه");
+  }
+
+  treasury = await prisma.treasury.update({
+    where: { id: treasury.id },
+    data: {
+      vaultUsdBalance: Number(treasury.vaultUsdBalance) - Number(usdAmount),
+      vaultIqdBalance: Number(treasury.vaultIqdBalance) - Number(iqdAmount)
+    }
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      userId: removedById,
+      action: "SETTINGS_UPDATE",
+      details: `سحب أموال من الخزنة الرئيسية: ${usdAmount} USD, ${iqdAmount} IQD`,
+      ipAddress
+    }
+  });
+
+  return treasury;
+}
+
 export async function getDashboardSummary() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -114,6 +176,8 @@ export async function getDashboardSummary() {
     sellCountToday: sellCount,
     usdBalance: treasury?.usdBalance ?? 0,
     iqdBalance: treasury?.iqdBalance ?? 0,
+    vaultUsdBalance: treasury?.vaultUsdBalance ?? 0,
+    vaultIqdBalance: treasury?.vaultIqdBalance ?? 0,
     avgCostPrice: treasury?.avgCostPrice ?? 0,
     lastTransactions,
   };

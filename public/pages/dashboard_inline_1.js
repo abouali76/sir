@@ -95,19 +95,36 @@
             ` : ''}
 
             <div class="stat-card">
-              <div class="label">رصيد الدولار</div>
+              <div class="label">رصيد الصندوق (دولار)</div>
               <div class="value" style="font-size: 24px;">$${formatMoney(data.usdBalance)}</div>
               <div class="sub" style="font-size: 13px; font-weight: bold; margin-top: 6px; color: var(--primary);">
                 ${tafqeet(data.usdBalance)} دولار أمريكي
               </div>
             </div>
             <div class="stat-card">
-              <div class="label">رصيد الدينار</div>
+              <div class="label">رصيد الصندوق (دينار)</div>
               <div class="value" style="font-size: 24px;">${formatMoney(data.iqdBalance)}</div>
               <div class="sub" style="font-size: 13px; font-weight: bold; margin-top: 6px; color: var(--primary);">
                 ${tafqeet(data.iqdBalance)} دينار عراقي
               </div>
             </div>
+
+            ${me.role === 'ADMIN' ? `
+            <div class="stat-card" style="border-top-color: #8e44ad;">
+              <div class="label">رصيد الخزنة الرئيسية (دولار)</div>
+              <div class="value" style="font-size: 24px;">$${formatMoney(data.vaultUsdBalance || 0)}</div>
+              <div class="sub" style="font-size: 13px; font-weight: bold; margin-top: 6px; color: #8e44ad;">
+                ${tafqeet(data.vaultUsdBalance || 0)} دولار أمريكي
+              </div>
+            </div>
+            <div class="stat-card" style="border-top-color: #8e44ad;">
+              <div class="label">رصيد الخزنة الرئيسية (دينار)</div>
+              <div class="value" style="font-size: 24px;">${formatMoney(data.vaultIqdBalance || 0)}</div>
+              <div class="sub" style="font-size: 13px; font-weight: bold; margin-top: 6px; color: #8e44ad;">
+                ${tafqeet(data.vaultIqdBalance || 0)} دينار عراقي
+              </div>
+            </div>
+            ` : ''}
 
             ${me.role === 'ADMIN' ? `
             <div class="stat-card danger">
@@ -128,20 +145,27 @@
           </div>
           
           ${me.role === 'ADMIN' ? `
-          <div style="margin-bottom: 24px; display: flex; gap: 12px;">
+          <div style="margin-bottom: 24px; display: flex; gap: 12px; flex-wrap: wrap;">
             <button class="btn btn-primary" onclick="document.getElementById('addFundsModal').classList.add('show')">
-              + إضافة أموال للخزينة
+              + إضافة للصندوق
             </button>
             <button class="btn btn-outline" style="border-color: #e74c3c; color: #e74c3c;" onclick="document.getElementById('removeFundsModal').classList.add('show')">
-              - سحب أموال من الخزينة
+              - سحب من الصندوق
+            </button>
+            <div style="width: 2px; background: #ddd; margin: 0 10px;"></div>
+            <button class="btn btn-primary" style="background: #8e44ad; border-color: #8e44ad;" onclick="document.getElementById('addVaultModal').classList.add('show')">
+              + إيداع في الخزنة
+            </button>
+            <button class="btn btn-outline" style="border-color: #8e44ad; color: #8e44ad;" onclick="document.getElementById('removeVaultModal').classList.add('show')">
+              - سحب من الخزنة
             </button>
           </div>
 
-          <!-- Add Funds Modal -->
+          <!-- Add Funds Modal (Active Treasury) -->
           <div class="modal-overlay" id="addFundsModal">
             <div class="modal">
               <div class="modal-header">
-                <h3>إضافة أموال للخزينة</h3>
+                <h3>إضافة أموال للصندوق (الخزينة النشطة)</h3>
                 <button type="button" class="close-btn" onclick="document.getElementById('addFundsModal').classList.remove('show')">&times;</button>
               </div>
               <form id="addFundsForm">
@@ -163,11 +187,11 @@
             </div>
           </div>
 
-          <!-- Remove Funds Modal -->
+          <!-- Remove Funds Modal (Active Treasury) -->
           <div class="modal-overlay" id="removeFundsModal">
             <div class="modal">
               <div class="modal-header">
-                <h3 style="color: #e74c3c;">سحب أموال من الخزينة</h3>
+                <h3 style="color: #e74c3c;">سحب أموال من الصندوق</h3>
                 <button type="button" class="close-btn" onclick="document.getElementById('removeFundsModal').classList.remove('show')">&times;</button>
               </div>
               <form id="removeFundsForm">
@@ -184,6 +208,58 @@
                 <div class="modal-actions">
                   <button type="submit" class="btn btn-primary" style="background: #e74c3c; border: none;">تأكيد السحب</button>
                   <button type="button" class="btn btn-outline" onclick="document.getElementById('removeFundsModal').classList.remove('show')">إلغاء</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Add Vault Modal -->
+          <div class="modal-overlay" id="addVaultModal">
+            <div class="modal">
+              <div class="modal-header">
+                <h3 style="color: #8e44ad;">إيداع في الخزنة الرئيسية</h3>
+                <button type="button" class="close-btn" onclick="document.getElementById('addVaultModal').classList.remove('show')">&times;</button>
+              </div>
+              <form id="addVaultForm">
+                <div style="display:flex; gap:16px; margin-bottom: 12px;">
+                  <div class="form-group" style="flex:1; margin-bottom: 0;">
+                    <label>المبلغ بالدولار ($)</label>
+                    <input type="number" id="vaultFundUsd" step="0.01" />
+                  </div>
+                  <div class="form-group" style="flex:1; margin-bottom: 0;">
+                    <label>المبلغ بالدينار (د.ع)</label>
+                    <input type="number" id="vaultFundIqd" step="0.01" />
+                  </div>
+                </div>
+                <div class="modal-actions">
+                  <button type="submit" class="btn btn-primary" style="background: #8e44ad; border-color: #8e44ad;">حفظ الإيداع</button>
+                  <button type="button" class="btn btn-outline" onclick="document.getElementById('addVaultModal').classList.remove('show')">إلغاء</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Remove Vault Modal -->
+          <div class="modal-overlay" id="removeVaultModal">
+            <div class="modal">
+              <div class="modal-header">
+                <h3 style="color: #8e44ad;">سحب من الخزنة الرئيسية</h3>
+                <button type="button" class="close-btn" onclick="document.getElementById('removeVaultModal').classList.remove('show')">&times;</button>
+              </div>
+              <form id="removeVaultForm">
+                <div style="display:flex; gap:16px; margin-bottom: 12px;">
+                  <div class="form-group" style="flex:1; margin-bottom: 0;">
+                    <label>المبلغ المراد سحبه بالدولار ($)</label>
+                    <input type="number" id="vaultRemoveUsd" step="0.01" />
+                  </div>
+                  <div class="form-group" style="flex:1; margin-bottom: 0;">
+                    <label>المبلغ المراد سحبه بالدينار (د.ع)</label>
+                    <input type="number" id="vaultRemoveIqd" step="0.01" />
+                  </div>
+                </div>
+                <div class="modal-actions">
+                  <button type="submit" class="btn btn-primary" style="background: #8e44ad; border-color: #8e44ad;">تأكيد السحب</button>
+                  <button type="button" class="btn btn-outline" onclick="document.getElementById('removeVaultModal').classList.remove('show')">إلغاء</button>
                 </div>
               </form>
             </div>
@@ -288,7 +364,47 @@
                   usdAmount: document.getElementById('removeUsd').value || 0,
                   iqdAmount: document.getElementById('removeIqd').value || 0
                 });
-                alert('تم سحب الأموال من الخزينة بنجاح');
+                alert('تم سحب الأموال من الصندوق بنجاح');
+                window.location.reload();
+              } catch (err) {
+                alert(err.message || 'حدث خطأ أثناء سحب الأموال');
+                e.target.querySelector('button').disabled = false;
+              }
+            });
+          }
+
+          const addVaultForm = document.getElementById('addVaultForm');
+          if (addVaultForm) {
+            addVaultForm.addEventListener('submit', async (e) => {
+              e.preventDefault();
+              try {
+                const btn = e.target.querySelector('button');
+                btn.disabled = true;
+                await api.post('/treasury/vault/add-funds', {
+                  usdAmount: document.getElementById('vaultFundUsd').value || 0,
+                  iqdAmount: document.getElementById('vaultFundIqd').value || 0
+                });
+                alert('تم الإيداع في الخزنة بنجاح');
+                window.location.reload();
+              } catch (err) {
+                alert(err.message || 'حدث خطأ');
+                e.target.querySelector('button').disabled = false;
+              }
+            });
+          }
+
+          const removeVaultForm = document.getElementById('removeVaultForm');
+          if (removeVaultForm) {
+            removeVaultForm.addEventListener('submit', async (e) => {
+              e.preventDefault();
+              try {
+                const btn = e.target.querySelector('button');
+                btn.disabled = true;
+                await api.post('/treasury/vault/remove-funds', {
+                  usdAmount: document.getElementById('vaultRemoveUsd').value || 0,
+                  iqdAmount: document.getElementById('vaultRemoveIqd').value || 0
+                });
+                alert('تم السحب من الخزنة بنجاح');
                 window.location.reload();
               } catch (err) {
                 alert(err.message || 'حدث خطأ أثناء سحب الأموال');
