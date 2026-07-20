@@ -60,9 +60,7 @@
         return prefix + result.join(" و");
       }
 
-      try {
-        const { data } = await api.get('/treasury/dashboard');
-
+      function renderDashboard(data) {
         body.innerHTML = `
           <div class="cards-grid">
             <div class="stat-card">
@@ -249,6 +247,7 @@
           </div>
         `;
 
+        // Attach event listeners after rendering
         if (me.role === 'ADMIN') {
           const form = document.getElementById('addFundsForm');
           if (form) {
@@ -290,6 +289,19 @@
             });
           }
         }
+      }
+
+      try {
+        // Stale-While-Revalidate
+        const cachedData = sessionStorage.getItem('dashboardData');
+        if (cachedData) {
+          renderDashboard(JSON.parse(cachedData));
+        }
+
+        const { data } = await api.get('/treasury/dashboard');
+        sessionStorage.setItem('dashboardData', JSON.stringify(data));
+        renderDashboard(data);
+
       } catch (err) {
         body.innerHTML = `<div class="panel"><p class="error-msg show">${err.message}</p></div>`;
       }
