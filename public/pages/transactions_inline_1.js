@@ -19,10 +19,16 @@
         const rateInput = document.getElementById(rateId).value;
         
         // Update live text for USD input
-        const textElementId = usdId + 'Text';
-        const textElement = document.getElementById(textElementId);
-        if (textElement) {
-          textElement.innerText = usd > 0 ? (numberToArabicWords(usd) + " دولار أمريكي") : '';
+        const usdTextElement = document.getElementById(usdId + 'Text');
+        if (usdTextElement) {
+          usdTextElement.innerText = usd > 0 ? (numberToArabicWords(usd) + " دولار أمريكي") : '';
+        }
+
+        // Update live text for Rate input
+        const rateTextElement = document.getElementById(rateId + 'Text');
+        if (rateTextElement) {
+          const parsedRate = parseFloat(rateInput) || 0;
+          rateTextElement.innerText = parsedRate > 0 ? (numberToArabicWords(parsedRate) + " دينار عراقي لكل 100$") : '';
         }
 
         if (!type || (!currentRate && !rateInput)) return;
@@ -76,6 +82,7 @@
               <div class="form-group">
                 <label>سعر الصرف لكل 100$</label>
                 <input type="number" id="buyCustomRate" step="0.01" required />
+                <div id="buyCustomRateText" style="color: #666; font-size: 12px; margin-top: 4px; min-height: 18px;"></div>
               </div>
 
               <div class="form-group">
@@ -112,6 +119,7 @@
               <div class="form-group">
                 <label>سعر الصرف لكل 100$</label>
                 <input type="number" id="sellCustomRate" step="0.01" required />
+                <div id="sellCustomRateText" style="color: #666; font-size: 12px; margin-top: 4px; min-height: 18px;"></div>
               </div>
 
               <div class="form-group">
