@@ -68,8 +68,8 @@ model ExchangeRate {
   buyPrice   Float   // سعر شراء الدولار (الذي يدفعه المكتب)
   sellPrice  Float   // سعر بيع الدولار (الذي يستلمه المكتب)
   isActive   Boolean  @default(true)
-  setById    Int
-  setBy      User     @relation(fields: [setById], references: [id])
+  setById    Int?
+  setBy      User?    @relation(fields: [setById], references: [id], onDelete: SetNull)
   createdAt  DateTime @default(now())
 
   transactions Transaction[]
@@ -113,11 +113,11 @@ model Transaction {
   exchangeRateId  Int?
   exchangeRate    ExchangeRate?   @relation(fields: [exchangeRateId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   notes           String?         
-  employeeId      Int
-  employee        User            @relation("EmployeeTransactions", fields: [employeeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employeeId      Int?
+  employee        User?           @relation("EmployeeTransactions", fields: [employeeId], references: [id], onDelete: SetNull)
   isDeleted       Boolean         @default(false)
   deletedById     Int?
-  deletedBy       User?           @relation("DeletedByUser", fields: [deletedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  deletedBy       User?           @relation("DeletedByUser", fields: [deletedById], references: [id], onDelete: SetNull)
   deletedAt       DateTime?
   transactionDate DateTime        @default(now())
   createdAt       DateTime        @default(now())
@@ -172,7 +172,7 @@ model ProfitHistory {
 model AuditLog {
   id        Int         @id @default(autoincrement())
   userId    Int?
-  user      User?       @relation(fields: [userId], references: [id])
+  user      User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
   action    String       // Was AuditAction
   details   String?     
   ipAddress String?     

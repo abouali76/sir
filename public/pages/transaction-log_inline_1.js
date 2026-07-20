@@ -89,7 +89,7 @@
                       <td>${formatMoney(t.unitPrice)}</td>
                       <td>${formatMoney(t.iqdAmount)}</td>
                       <td>${t.type === 'SELL' ? formatMoney(t.profit) : '-'}</td>
-                      <td>${t.employee.fullName}</td>
+                      <td>${t.employee ? t.employee.fullName : '<span style="color:#e74c3c">مستخدم محذوف</span>'}</td>
                       <td>${formatDate(t.transactionDate)}</td>
                       <td>
                         <button class="btn btn-outline btn-sm" onclick='openEdit(${JSON.stringify({ id: t.id, customerName: t.customerName, notes: t.notes })})'>تعديل</button>
