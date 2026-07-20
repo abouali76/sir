@@ -6,7 +6,6 @@ export async function getCurrentRate() {
     where: { isActive: true },
     orderBy: { createdAt: 'desc' },
   });
-  if (!rate) throw ApiError.notFound('لم يتم تحديد سعر الصرف بعد، يرجى ضبطه من المدير');
   return rate;
 }
 

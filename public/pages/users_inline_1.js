@@ -27,11 +27,11 @@
               <input type="hidden" id="userId" />
               <div class="form-group">
                 <label>اسم المستخدم</label>
-                <input type="text" id="username" required />
+                <input type="text" id="username" required autocomplete="username" />
               </div>
               <div class="form-group">
                 <label>الاسم الكامل</label>
-                <input type="text" id="fullName" required />
+                <input type="text" id="fullName" required autocomplete="name" />
               </div>
               <div class="form-group" id="passwordGroup">
                 <label>كلمة المرور</label>
