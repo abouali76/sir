@@ -59,9 +59,16 @@ export async function createTransaction(input: CreateTransactionInput, employeeI
     if (type === "BUY") {
       // شراء دولار: يزيد رصيد الدولار، ينقص رصيد الدينار
       const currentIqd = Number(treasury.iqdBalance);
-      if (currentIqd < iqdAmount) {
+      if (usdAmount > 0 && currentIqd < iqdAmount) {
         throw ApiError.badRequest(
           `رصيد الدينار في الخزينة (${currentIqd.toLocaleString()}) غير كافٍ لإتمام عملية الشراء بمبلغ ${iqdAmount.toLocaleString()} دينار`
+        );
+      }
+      
+      const currentUsd = Number(treasury.usdBalance);
+      if (usdAmount < 0 && currentUsd < Math.abs(usdAmount)) {
+        throw ApiError.badRequest(
+          `رصيد الدولار في الخزينة (${currentUsd.toLocaleString()}$) غير كافٍ لسحب ${Math.abs(usdAmount).toLocaleString()}$ (شراء عكسي)`
         );
       }
 
@@ -78,9 +85,16 @@ export async function createTransaction(input: CreateTransactionInput, employeeI
     } else {
       // بيع دولار: ينقص رصيد الدولار، يزيد رصيد الدينار
       const currentUsd = Number(treasury.usdBalance);
-      if (currentUsd < usdAmount) {
+      if (usdAmount > 0 && currentUsd < usdAmount) {
         throw ApiError.badRequest(
           `رصيد الدولار في الخزينة (${currentUsd.toLocaleString()}$) غير كافٍ لإتمام عملية البيع بمبلغ ${usdAmount.toLocaleString()}$`
+        );
+      }
+      
+      const currentIqd = Number(treasury.iqdBalance);
+      if (usdAmount < 0 && currentIqd < Math.abs(iqdAmount)) {
+        throw ApiError.badRequest(
+          `رصيد الدينار في الخزينة (${currentIqd.toLocaleString()}) غير كافٍ لسحب ${Math.abs(iqdAmount).toLocaleString()} دينار (بيع عكسي)`
         );
       }
 

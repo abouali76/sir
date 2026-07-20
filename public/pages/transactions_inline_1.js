@@ -18,10 +18,16 @@
         const usd = parseFloat(document.getElementById(usdId).value) || 0;
         const rateInput = document.getElementById(rateId).value;
         
+        // Show/hide negative warning
+        const warningEl = document.getElementById(type === 'BUY' ? 'buyNegativeWarning' : 'sellNegativeWarning');
+        if (warningEl) {
+          warningEl.style.display = usd < 0 ? 'block' : 'none';
+        }
+
         // Update live text for USD input
         const usdTextElement = document.getElementById(usdId + 'Text');
         if (usdTextElement) {
-          usdTextElement.innerText = usd > 0 ? (numberToArabicWords(usd) + " دولار أمريكي") : '';
+          usdTextElement.innerText = usd !== 0 ? (numberToArabicWords(Math.abs(usd)) + " دولار أمريكي " + (usd < 0 ? "(سالب)" : "")) : '';
         }
 
         // Update live text for Rate input
@@ -34,14 +40,13 @@
         if (!type || (!currentRate && !rateInput)) return;
         
         const defaultPrice = currentRate ? (type === 'BUY' ? currentRate.buyPrice : currentRate.sellPrice) : 0;
-        // If the user entered a custom rate per 100 USD, divide it by 100
         const price = rateInput ? (parseFloat(rateInput) / 100) : defaultPrice;
         
         const total = usd * price;
-        if (total > 0) {
+        if (usd !== 0) {
           document.getElementById(resultId).innerHTML =
-            `<div style="font-size: 16px;">المبلغ الإجمالي: <strong>${formatMoney(total)} دينار</strong> (بسعر ${formatMoney(price)})</div>
-             <div style="font-size: 13px; font-weight: normal; margin-top: 4px; color: #555;">${numberToArabicWords(total)} دينار عراقي</div>`;
+            `<div style="font-size: 16px;">المبلغ الإجمالي: <strong dir="ltr">${formatMoney(total)}</strong> دينار (بسعر ${formatMoney(price)})</div>
+             <div style="font-size: 13px; font-weight: normal; margin-top: 4px; color: #555;">${total < 0 ? 'سالب ' : ''}${numberToArabicWords(Math.abs(total))} دينار عراقي</div>`;
         } else {
           document.getElementById(resultId).innerHTML = '';
         }
@@ -75,8 +80,9 @@
 
               <div class="form-group">
                 <label>المبلغ (دولار)</label>
-                <input type="number" id="buyUsdAmount" min="1" step="0.01" required placeholder="مثال: 500" />
+                <input type="number" id="buyUsdAmount" step="0.01" required placeholder="مثال: 500 أو -500" />
                 <div id="buyUsdAmountText" style="color: #666; font-size: 12px; margin-top: 4px; min-height: 18px;"></div>
+                <div id="buyNegativeWarning" class="warning-msg" style="display:none; font-size:12px; margin-top:5px; padding: 6px;">تنبيه: أنت تقوم بعملية شراء بالسالب (عكسية). سيتم سحب هذا الرصيد وتعزيز الصندوق به.</div>
               </div>
 
               <div class="form-group">
@@ -112,8 +118,9 @@
 
               <div class="form-group">
                 <label>المبلغ (دولار)</label>
-                <input type="number" id="sellUsdAmount" min="1" step="0.01" required placeholder="مثال: 500" />
+                <input type="number" id="sellUsdAmount" step="0.01" required placeholder="مثال: 500 أو -500" />
                 <div id="sellUsdAmountText" style="color: #666; font-size: 12px; margin-top: 4px; min-height: 18px;"></div>
+                <div id="sellNegativeWarning" class="warning-msg" style="display:none; font-size:12px; margin-top:5px; padding: 6px;">تنبيه: أنت تقوم بعملية بيع بالسالب (عكسية). سيتم إيداع هذا الرصيد لتعزيز الصندوق.</div>
               </div>
 
               <div class="form-group">
@@ -175,9 +182,19 @@
         submitBtn.textContent = 'جاري التنفيذ...';
 
         try {
+          const usdAmount = parseFloat(document.getElementById('buyUsdAmount').value);
+          
+          if (usdAmount < 0) {
+            if (!confirm('تنبيه: أنت تقوم بعملية شراء بالسالب، هل أنت متأكد من تنفيذ هذه العملية العكسية لتعزيز الصندوق؟')) {
+              submitBtn.disabled = false;
+              submitBtn.textContent = 'تنفيذ عملية الشراء';
+              return;
+            }
+          }
+
           const payload = {
             type: 'BUY',
-            usdAmount: parseFloat(document.getElementById('buyUsdAmount').value),
+            usdAmount,
             customRate: parseFloat(document.getElementById('buyCustomRate').value) / 100,
             customerName: document.getElementById('buyCustomerName').value.trim() || undefined,
             notes: document.getElementById('buyNotes').value.trim() || undefined,
@@ -211,9 +228,19 @@
         submitBtn.textContent = 'جاري التنفيذ...';
 
         try {
+          const usdAmount = parseFloat(document.getElementById('sellUsdAmount').value);
+          
+          if (usdAmount < 0) {
+            if (!confirm('تنبيه: أنت تقوم بعملية بيع بالسالب، هل أنت متأكد من تنفيذ هذه العملية العكسية لتعزيز الصندوق؟')) {
+              submitBtn.disabled = false;
+              submitBtn.textContent = 'تنفيذ عملية البيع';
+              return;
+            }
+          }
+
           const payload = {
             type: 'SELL',
-            usdAmount: parseFloat(document.getElementById('sellUsdAmount').value),
+            usdAmount,
             customRate: parseFloat(document.getElementById('sellCustomRate').value) / 100,
             customerName: document.getElementById('sellCustomerName').value.trim() || undefined,
             notes: document.getElementById('sellNotes').value.trim() || undefined,
