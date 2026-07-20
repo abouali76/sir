@@ -1,6 +1,5 @@
 import express, { Application } from 'express';
 import cors from 'cors';
-import helmet from 'helmet';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
@@ -23,19 +22,6 @@ export function createApp(): Application {
   const app = express();
 
   // ===== الأمان =====
-  app.use(
-    helmet({
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "'unsafe-inline'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
-          imgSrc: ["'self'", "data:", "blob:"],
-          connectSrc: ["'self'"],
-        },
-      },
-    })
-  );
   app.use(
     cors({
       origin: true,
