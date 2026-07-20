@@ -53,7 +53,7 @@ export async function createUser(
 
 export async function updateUser(
   id: number,
-  data: { fullName?: string; role?: string; isActive?: boolean },
+  data: { fullName?: string; role?: string; isActive?: boolean; password?: string },
   updatedByUserId: number
 ) {
   const user = await prisma.user.findUnique({ where: { id } });
@@ -66,12 +66,18 @@ export async function updateUser(
     roleId = role.id;
   }
 
+  let passwordHash: string | undefined;
+  if (data.password && data.password.trim().length > 0) {
+    passwordHash = await bcrypt.hash(data.password, env.bcrypt.saltRounds);
+  }
+
   const updated = await prisma.user.update({
     where: { id },
     data: {
       fullName: data.fullName,
       isActive: data.isActive,
       ...(roleId ? { roleId } : {}),
+      ...(passwordHash ? { passwordHash } : {}),
     },
   });
 

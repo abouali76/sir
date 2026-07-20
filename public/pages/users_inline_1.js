@@ -58,10 +58,9 @@
         </div>
       `;
 
-      async function loadUsers() {
+      function loadUsers() {
         const container = document.getElementById('usersContainer');
-        try {
-          const { data } = await api.get('/users');
+        api.get('/users').then(({ data }) => {
           container.innerHTML = `
             <table>
               <thead><tr><th>اسم المستخدم</th><th>الاسم الكامل</th><th>الصلاحية</th><th>الحالة</th><th>آخر دخول</th><th>إجراءات</th></tr></thead>
@@ -75,22 +74,24 @@
                     <td>${u.lastLoginAt ? formatDate(u.lastLoginAt) : '—'}</td>
                     <td>
                       <button class="btn btn-outline btn-sm" onclick='openEditUser(${JSON.stringify(u)})'>تعديل</button>
-                      ${u.isActive ? `<button class="btn btn-danger btn-sm" onclick="deactivateUser(${u.id})">تعطيل</button>` : ''}
+                      ${u.isActive ? `<button class="btn btn-danger btn-sm" style="background:#e74c3c;border:none;" onclick="deactivateUser(${u.id})">حذف</button>` : ''}
                     </td>
                   </tr>
                 `).join('')}
               </tbody>
             </table>
           `;
-        } catch (err) {
+        }).catch(err => {
           container.innerHTML = `<div class="error-msg show">${err.message}</div>`;
-        }
+        });
       }
 
       function openModal(isEdit) {
         document.getElementById('modalTitle').textContent = isEdit ? 'تعديل مستخدم' : 'مستخدم جديد';
-        document.getElementById('passwordGroup').style.display = isEdit ? 'none' : 'block';
+        document.getElementById('passwordGroup').style.display = 'block';
+        document.getElementById('passwordGroup').querySelector('label').textContent = isEdit ? 'كلمة المرور الجديدة (اتركه فارغاً لعدم التغيير)' : 'كلمة المرور';
         document.getElementById('password').required = !isEdit;
+        document.getElementById('password').value = '';
         document.getElementById('username').disabled = isEdit;
         document.getElementById('statusGroup').style.display = isEdit ? 'block' : 'none';
         document.getElementById('userFormError').classList.remove('show');
@@ -113,7 +114,7 @@
       };
 
       window.deactivateUser = async (id) => {
-        if (!confirm('هل تريد تعطيل هذا المستخدم؟')) return;
+        if (!confirm('هل أنت متأكد من حذف هذا المستخدم؟')) return;
         try {
           await api.delete(`/users/${id}`);
           loadUsers();
@@ -129,20 +130,23 @@
         e.preventDefault();
         const id = document.getElementById('userId').value;
         const errBox = document.getElementById('userFormError');
+        const passVal = document.getElementById('password').value;
         errBox.classList.remove('show');
 
         try {
           if (id) {
-            await api.patch(`/users/${id}`, {
+            const payload = {
               fullName: document.getElementById('fullName').value.trim(),
               role: document.getElementById('role').value,
               isActive: document.getElementById('isActive').checked,
-            });
+            };
+            if (passVal) payload.password = passVal;
+            await api.patch(`/users/${id}`, payload);
           } else {
             await api.post('/users', {
               username: document.getElementById('username').value.trim(),
               fullName: document.getElementById('fullName').value.trim(),
-              password: document.getElementById('password').value,
+              password: passVal,
               role: document.getElementById('role').value,
             });
           }

@@ -16,6 +16,7 @@ export const updateUserSchema = z.object({
     fullName: z.string().min(1, 'الاسم الكامل مطلوب').optional(),
     role: z.enum(['ADMIN', 'EMPLOYEE']).optional(),
     isActive: z.boolean().optional(),
+    password: z.string().min(1, 'كلمة المرور مطلوبة').optional(),
   }),
   query: z.object({}).optional(),
   params: z.object({ id: z.string().regex(/^\d+$/) }),
