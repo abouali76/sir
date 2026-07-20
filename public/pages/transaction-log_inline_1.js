@@ -87,7 +87,7 @@
                       <td><span class="badge ${t.type === 'BUY' ? 'badge-buy' : 'badge-sell'}">${t.type === 'BUY' ? 'شراء' : 'بيع'}</span></td>
                       <td>${t.customerName || '-'}</td>
                       <td>${renderMoneyWithTafqeet(t.usdAmount, 'دولار')}</td>
-                      <td>${formatMoney(t.unitPrice)}</td>
+                      <td>${renderMoneyWithTafqeet(t.unitPrice, 'دينار')}</td>
                       <td>${renderMoneyWithTafqeet(t.iqdAmount, 'دينار')}</td>
                       <td>${t.type === 'SELL' ? renderMoneyWithTafqeet(t.profit, 'دينار') : '-'}</td>
                       <td>${t.employee ? t.employee.fullName : '<span style="color:#e74c3c">مستخدم محذوف</span>'}</td>
