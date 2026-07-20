@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { prisma } from '../../config/database';
 import { env } from '../../config/env';
 import { ApiError } from '../../utils/ApiError';
