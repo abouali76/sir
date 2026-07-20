@@ -9,21 +9,31 @@ export async function getTreasuryBalance() {
 
 export async function addFunds(usdAmount: number, iqdAmount: number, addedById: number, ipAddress?: string) {
   let treasury = await prisma.treasury.findFirst();
+  const currentRate = await prisma.exchangeRate.findFirst({ where: { isActive: true }, orderBy: { createdAt: 'desc' } });
+  const defaultBuyPrice = currentRate ? currentRate.buyPrice : 0;
   
   if (!treasury) {
     treasury = await prisma.treasury.create({
       data: {
         usdBalance: usdAmount,
         iqdBalance: iqdAmount,
-        avgCostPrice: 0
+        avgCostPrice: defaultBuyPrice
       }
     });
   } else {
+    // If there is currently 0 avgCostPrice and we're adding USD, initialize it to the current buy price
+    // to prevent 100% false profits on the next sell.
+    let newAvgCost = treasury.avgCostPrice;
+    if (newAvgCost === 0 && usdAmount > 0) {
+      newAvgCost = defaultBuyPrice;
+    }
+
     treasury = await prisma.treasury.update({
       where: { id: treasury.id },
       data: {
         usdBalance: Number(treasury.usdBalance) + Number(usdAmount),
-        iqdBalance: Number(treasury.iqdBalance) + Number(iqdAmount)
+        iqdBalance: Number(treasury.iqdBalance) + Number(iqdAmount),
+        avgCostPrice: newAvgCost
       }
     });
   }

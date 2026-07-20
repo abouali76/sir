@@ -65,6 +65,14 @@ export async function createTransaction(input: CreateTransactionInput, employeeI
         );
       }
 
+      // Calculate new weighted average cost
+      newAvgCost = calculateNewWeightedAverage(
+        treasury.usdBalance,
+        treasury.avgCostPrice,
+        usdAmount,
+        unitPrice
+      );
+
       newUsdBalance = Number(treasury.usdBalance) + Number(usdAmount);
       newIqdBalance = Number(treasury.iqdBalance) - Number(iqdAmount);
     } else {
@@ -78,14 +86,8 @@ export async function createTransaction(input: CreateTransactionInput, employeeI
 
       costBasisAvg = Number(treasury.avgCostPrice);
       
-      // جلب آخر سعر شراء تم إدخاله في النظام كمرجع لليوم
-      const lastBuyTx = await tx.transaction.findFirst({
-        where: { type: 'BUY', isDeleted: false },
-        orderBy: { transactionDate: 'desc' }
-      });
-      const referenceBuyPrice = lastBuyTx ? Number(lastBuyTx.unitPrice) : 0;
-      
-      profit = referenceBuyPrice > 0 ? (unitPrice - referenceBuyPrice) * usdAmount : 0;
+      // Calculate profit using the weighted average cost
+      profit = calculateSellProfit(unitPrice, costBasisAvg, usdAmount);
 
       newUsdBalance = Number(treasury.usdBalance) - Number(usdAmount);
       newIqdBalance = Number(treasury.iqdBalance) + Number(iqdAmount);
@@ -97,6 +99,7 @@ export async function createTransaction(input: CreateTransactionInput, employeeI
       data: {
         usdBalance: newUsdBalance,
         iqdBalance: newIqdBalance,
+        avgCostPrice: newAvgCost,
       },
     });
 
