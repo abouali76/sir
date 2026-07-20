@@ -10,9 +10,23 @@ const NAV_ITEMS = [
 async function renderLayout(activeKey, pageTitle) {
   let me;
   try {
-    const res = await api.get('/auth/me');
-    me = res.data;
+    const cachedUser = sessionStorage.getItem('currentUser');
+    if (cachedUser) {
+      me = JSON.parse(cachedUser);
+      // Validate in background
+      api.get('/auth/me').then(res => {
+        sessionStorage.setItem('currentUser', JSON.stringify(res.data));
+      }).catch(() => {
+        sessionStorage.removeItem('currentUser');
+        window.location.href = '/index.html';
+      });
+    } else {
+      const res = await api.get('/auth/me');
+      me = res.data;
+      sessionStorage.setItem('currentUser', JSON.stringify(me));
+    }
   } catch {
+    sessionStorage.removeItem('currentUser');
     window.location.href = '/index.html';
     return null;
   }
@@ -64,6 +78,7 @@ async function renderLayout(activeKey, pageTitle) {
   `;
 
   document.getElementById('logoutBtn').addEventListener('click', async () => {
+    sessionStorage.removeItem('currentUser');
     await api.post('/auth/logout');
     window.location.href = '/index.html';
   });
