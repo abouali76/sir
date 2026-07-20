@@ -74,7 +74,7 @@
                     <td>${u.lastLoginAt ? formatDate(u.lastLoginAt) : '—'}</td>
                     <td>
                       <button class="btn btn-outline btn-sm" onclick='openEditUser(${JSON.stringify(u)})'>تعديل</button>
-                      ${u.isActive ? `<button class="btn btn-danger btn-sm" style="background:#e74c3c;border:none;" onclick="deactivateUser(${u.id})">حذف</button>` : ''}
+                      <button class="btn btn-danger btn-sm" style="background:#e74c3c;border:none;" onclick="deactivateUser(${u.id})">حذف</button>
                     </td>
                   </tr>
                 `).join('')}
