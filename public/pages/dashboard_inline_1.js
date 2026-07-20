@@ -63,6 +63,7 @@
       function renderDashboard(data) {
         body.innerHTML = `
           <div class="cards-grid">
+            ${me.role === 'ADMIN' ? `
             <div class="stat-card">
               <div class="label">سعر شراء الدولار</div>
               <div class="value">${data.currentBuyPrice ? formatMoney(data.currentBuyPrice) : '—'}</div>
@@ -91,6 +92,8 @@
                 ${tafqeet(data.monthProfit)} دينار عراقي
               </div>
             </div>
+            ` : ''}
+
             <div class="stat-card">
               <div class="label">رصيد الدولار</div>
               <div class="value" style="font-size: 24px;">$${formatMoney(data.usdBalance)}</div>
@@ -105,6 +108,8 @@
                 ${tafqeet(data.iqdBalance)} دينار عراقي
               </div>
             </div>
+
+            ${me.role === 'ADMIN' ? `
             <div class="stat-card danger">
               <div class="label">عمليات الشراء اليوم</div>
               <div class="value">${data.buyCountToday}</div>
@@ -119,6 +124,7 @@
                 ${tafqeet(data.sellCountToday)} عملية
               </div>
             </div>
+            ` : ''}
           </div>
           
           ${me.role === 'ADMIN' ? `
@@ -184,6 +190,7 @@
           </div>
           ` : ''}
 
+          ${me.role === 'ADMIN' ? `
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
             <div class="panel" style="border-top: 4px solid #2ecc71; margin-bottom: 0;">
               <div class="panel-header"><h3 style="color: #2ecc71;">آخر عمليات الشراء</h3></div>
@@ -245,6 +252,7 @@
               </div>
             </div>
           </div>
+          ` : ''}
         `;
 
         // Attach event listeners after rendering
