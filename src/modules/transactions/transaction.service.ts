@@ -58,12 +58,6 @@ export async function createTransaction(input: CreateTransactionInput, employeeI
 
     if (type === "BUY") {
       // شراء دولار: يزيد رصيد الدولار، ينقص رصيد الدينار
-      const currentIqd = Number(treasury.iqdBalance);
-      if (usdAmount > 0 && currentIqd < iqdAmount) {
-        throw ApiError.badRequest(
-          `رصيد الدينار في الخزينة (${currentIqd.toLocaleString()}) غير كافٍ لإتمام عملية الشراء بمبلغ ${iqdAmount.toLocaleString()} دينار`
-        );
-      }
       
       // Calculate new weighted average cost
       newAvgCost = calculateNewWeightedAverage(
@@ -77,13 +71,6 @@ export async function createTransaction(input: CreateTransactionInput, employeeI
       newIqdBalance = Number(treasury.iqdBalance) - Number(iqdAmount);
     } else {
       // بيع دولار: ينقص رصيد الدولار، يزيد رصيد الدينار
-      const currentUsd = Number(treasury.usdBalance);
-      if (usdAmount > 0 && currentUsd < usdAmount) {
-        throw ApiError.badRequest(
-          `رصيد الدولار في الخزينة (${currentUsd.toLocaleString()}$) غير كافٍ لإتمام عملية البيع بمبلغ ${usdAmount.toLocaleString()}$`
-        );
-      }
-
       costBasisAvg = Number(treasury.avgCostPrice);
       
       // Calculate profit using the weighted average cost
