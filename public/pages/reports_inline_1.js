@@ -66,7 +66,7 @@
             <div style="width: 100%; display:flex; justify-content:center; margin-bottom: 10px;">
               <div class="stat-card" style="background: linear-gradient(135deg, #dcb95e, #f9f1d8); color: #0c4a32; width: 100%; max-width: 400px; text-align: center; border: 1px solid #c5a059; transform: none; cursor: default; align-items: center;">
                 <div class="label" style="color: #0c4a32; font-size: 16px; font-weight: 800;">إجمالي الأرباح</div>
-                <div class="value" style="font-size: 32px; margin: 10px 0; color: #0c4a32; justify-content: center;">${formatMoney(data.totalProfit)} د.ع</div>
+                <div class="value" style="font-size: 24px; margin: 10px 0; color: #0c4a32; justify-content: center;">${renderMoneyWithTafqeet(data.totalProfit, 'دينار', 'center')}</div>
                 <div class="sub" style="color: rgba(12,74,50,0.8); border-top-color: rgba(12,74,50,0.2);">صافي الربح للفترة المحددة</div>
               </div>
             </div>
@@ -74,28 +74,28 @@
             <div class="stat-card" style="width: 230px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; flex: none;">
               <div class="icon" style="background: rgba(46,204,113,0.1); font-size: 24px; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin: 0 auto 15px auto;">⬇️</div>
               <div class="label" style="text-align: center; width: 100%;">إجمالي شراء الدولار</div>
-              <div class="value" style="display: flex; justify-content: center; text-align: center; width: 100%;">$${formatMoney(data.totalBuyUsd)}</div>
+              <div class="value" style="display: flex; justify-content: center; text-align: center; width: 100%;">${renderMoneyWithTafqeet(data.totalBuyUsd, 'دولار', 'center')}</div>
               <div class="sub" style="text-align: center; width: 100%; color: var(--text-muted);">${data.buyCount} عملية شراء</div>
             </div>
             
             <div class="stat-card" style="width: 230px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; flex: none;">
               <div class="icon" style="background: rgba(231,76,60,0.1); font-size: 24px; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin: 0 auto 15px auto;">⬆️</div>
               <div class="label" style="text-align: center; width: 100%;">إجمالي بيع الدولار</div>
-              <div class="value" style="display: flex; justify-content: center; text-align: center; width: 100%;">$${formatMoney(data.totalSellUsd)}</div>
+              <div class="value" style="display: flex; justify-content: center; text-align: center; width: 100%;">${renderMoneyWithTafqeet(data.totalSellUsd, 'دولار', 'center')}</div>
               <div class="sub" style="text-align: center; width: 100%; color: var(--text-muted);">${data.sellCount} عملية بيع</div>
             </div>
             
             <div class="stat-card" style="width: 230px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; flex: none;">
               <div class="icon" style="background: rgba(52,152,219,0.1); font-size: 24px; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin: 0 auto 15px auto;">💵</div>
               <div class="label" style="text-align: center; width: 100%;">المدفوع للشراء (د.ع)</div>
-              <div class="value" style="display: flex; justify-content: center; text-align: center; width: 100%;">${formatMoney(data.totalBuyIqd)}</div>
+              <div class="value" style="display: flex; justify-content: center; text-align: center; width: 100%;">${renderMoneyWithTafqeet(data.totalBuyIqd, 'دينار', 'center')}</div>
               <div class="sub" style="text-align: center; width: 100%; color: var(--text-muted);">إجمالي رأس المال المصروف</div>
             </div>
             
             <div class="stat-card" style="width: 230px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; flex: none;">
               <div class="icon" style="background: rgba(155,89,182,0.1); font-size: 24px; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin: 0 auto 15px auto;">💰</div>
               <div class="label" style="text-align: center; width: 100%;">المقبوض للبيع (د.ع)</div>
-              <div class="value" style="display: flex; justify-content: center; text-align: center; width: 100%;">${formatMoney(data.totalSellIqd)}</div>
+              <div class="value" style="display: flex; justify-content: center; text-align: center; width: 100%;">${renderMoneyWithTafqeet(data.totalSellIqd, 'دينار', 'center')}</div>
               <div class="sub" style="text-align: center; width: 100%; color: var(--text-muted);">إجمالي المبالغ المستلمة</div>
             </div>
           `;

@@ -173,10 +173,12 @@
                   <div class="form-group" style="flex:1; margin-bottom: 0;">
                     <label>المبلغ بالدولار ($)</label>
                     <input type="number" id="fundUsd" step="0.01" />
+                    <div id="fundUsdText" style="color: #666; font-size: 11px; margin-top: 4px; min-height: 16px;"></div>
                   </div>
                   <div class="form-group" style="flex:1; margin-bottom: 0;">
                     <label>المبلغ بالدينار (د.ع)</label>
                     <input type="number" id="fundIqd" step="0.01" />
+                    <div id="fundIqdText" style="color: #666; font-size: 11px; margin-top: 4px; min-height: 16px;"></div>
                   </div>
                 </div>
                 <div class="modal-actions">
@@ -199,10 +201,12 @@
                   <div class="form-group" style="flex:1; margin-bottom: 0;">
                     <label>المبلغ المراد سحبه بالدولار ($)</label>
                     <input type="number" id="removeUsd" step="0.01" />
+                    <div id="removeUsdText" style="color: #666; font-size: 11px; margin-top: 4px; min-height: 16px;"></div>
                   </div>
                   <div class="form-group" style="flex:1; margin-bottom: 0;">
                     <label>المبلغ المراد سحبه بالدينار (د.ع)</label>
                     <input type="number" id="removeIqd" step="0.01" />
+                    <div id="removeIqdText" style="color: #666; font-size: 11px; margin-top: 4px; min-height: 16px;"></div>
                   </div>
                 </div>
                 <div class="modal-actions">
@@ -225,10 +229,12 @@
                   <div class="form-group" style="flex:1; margin-bottom: 0;">
                     <label>المبلغ بالدولار ($)</label>
                     <input type="number" id="vaultFundUsd" step="0.01" />
+                    <div id="vaultFundUsdText" style="color: #666; font-size: 11px; margin-top: 4px; min-height: 16px;"></div>
                   </div>
                   <div class="form-group" style="flex:1; margin-bottom: 0;">
                     <label>المبلغ بالدينار (د.ع)</label>
                     <input type="number" id="vaultFundIqd" step="0.01" />
+                    <div id="vaultFundIqdText" style="color: #666; font-size: 11px; margin-top: 4px; min-height: 16px;"></div>
                   </div>
                 </div>
                 <div class="modal-actions">
@@ -251,10 +257,12 @@
                   <div class="form-group" style="flex:1; margin-bottom: 0;">
                     <label>المبلغ المراد سحبه بالدولار ($)</label>
                     <input type="number" id="vaultRemoveUsd" step="0.01" />
+                    <div id="vaultRemoveUsdText" style="color: #666; font-size: 11px; margin-top: 4px; min-height: 16px;"></div>
                   </div>
                   <div class="form-group" style="flex:1; margin-bottom: 0;">
                     <label>المبلغ المراد سحبه بالدينار (د.ع)</label>
                     <input type="number" id="vaultRemoveIqd" step="0.01" />
+                    <div id="vaultRemoveIqdText" style="color: #666; font-size: 11px; margin-top: 4px; min-height: 16px;"></div>
                   </div>
                 </div>
                 <div class="modal-actions">
@@ -412,6 +420,26 @@
               }
             });
           }
+
+          // Live Tafqeet for modals
+          const inputPairs = [
+            { id: 'fundUsd', curr: 'دولار أمريكي' }, { id: 'fundIqd', curr: 'دينار عراقي' },
+            { id: 'removeUsd', curr: 'دولار أمريكي' }, { id: 'removeIqd', curr: 'دينار عراقي' },
+            { id: 'vaultFundUsd', curr: 'دولار أمريكي' }, { id: 'vaultFundIqd', curr: 'دينار عراقي' },
+            { id: 'vaultRemoveUsd', curr: 'دولار أمريكي' }, { id: 'vaultRemoveIqd', curr: 'دينار عراقي' }
+          ];
+          inputPairs.forEach(pair => {
+            const input = document.getElementById(pair.id);
+            if (input) {
+              input.addEventListener('input', (e) => {
+                const val = parseFloat(e.target.value) || 0;
+                const textEl = document.getElementById(pair.id + 'Text');
+                if (textEl) {
+                  textEl.innerText = val > 0 ? (numberToArabicWords(val) + " " + pair.curr) : '';
+                }
+              });
+            }
+          });
         }
       }
 

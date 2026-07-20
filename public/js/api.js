@@ -50,3 +50,61 @@ function formatDate(dateStr) {
     year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
   });
 }
+
+const TAFQEET_UNITS = ["", "ألف", "مليون", "مليار", "ترليون"];
+const TAFQEET_ONES = ["", "واحد", "اثنان", "ثلاثة", "أربعة", "خمسة", "ستة", "سبعة", "ثمانية", "تسعة", "عشرة", "أحد عشر", "اثنا عشر", "ثلاثة عشر", "أربعة عشر", "خمسة عشر", "ستة عشر", "سبعة عشر", "ثمانية عشر", "تسعة عشر"];
+const TAFQEET_TENS = ["", "", "عشرون", "ثلاثون", "أربعون", "خمسون", "ستون", "سبعون", "ثمانون", "تسعون"];
+const TAFQEET_HUNDREDS = ["", "مائة", "مائتان", "ثلاثمائة", "أربعمائة", "خمسمائة", "ستمائة", "سبعمائة", "ثمانمائة", "تسعمائة"];
+
+function numberToArabicWords(number) {
+  if (number === 0) return "صفر";
+  let numStr = Math.floor(Math.abs(number)).toString();
+  let parts = [];
+  while (numStr.length > 0) {
+    parts.push(numStr.slice(-3));
+    numStr = numStr.slice(0, -3);
+  }
+  let words = [];
+  for (let i = 0; i < parts.length; i++) {
+    let p = parseInt(parts[i], 10);
+    if (p === 0) continue;
+    let partWords = [];
+    let h = Math.floor(p / 100);
+    let rem = p % 100;
+    if (h > 0) partWords.push(TAFQEET_HUNDREDS[h]);
+    if (rem > 0) {
+      if (rem < 20) partWords.push(TAFQEET_ONES[rem]);
+      else {
+        let t = Math.floor(rem / 10);
+        let o = rem % 10;
+        if (o > 0) partWords.push(TAFQEET_ONES[o] + " و" + TAFQEET_TENS[t]);
+        else partWords.push(TAFQEET_TENS[t]);
+      }
+    }
+    let pStr = partWords.join(" و");
+    if (i > 0) {
+      if (p === 1) pStr = TAFQEET_UNITS[i];
+      else if (p === 2) pStr = (i === 1 ? "ألفان" : TAFQEET_UNITS[i] + "ان");
+      else if (p >= 3 && p <= 10) pStr += " " + (i === 1 ? "آلاف" : TAFQEET_UNITS[i] + "ات");
+      else pStr += " " + TAFQEET_UNITS[i];
+    }
+    words.unshift(pStr);
+  }
+  return words.join(" و");
+}
+
+function renderMoneyWithTafqeet(amount, currency = 'دينار', align = 'flex-start') {
+  if (amount === undefined || amount === null || isNaN(amount)) return '-';
+  const isNegative = amount < 0;
+  const absAmount = Math.abs(amount);
+  const formatted = formatMoney(absAmount);
+  const text = numberToArabicWords(absAmount) + " " + currency;
+  return `
+    <div style="display: flex; flex-direction: column; align-items: ${align}; gap: 2px; width: 100%;">
+      <span style="direction: ltr;">${isNegative ? '-' : ''}${currency === 'دولار' ? '$' : ''}${formatted}</span>
+      <small style="color: #666; font-size: 11px; font-weight: normal; line-height: 1.2; text-align: center;">
+        ${isNegative ? 'سالب ' : ''}${text}
+      </small>
+    </div>
+  `;
+}

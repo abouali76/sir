@@ -17,6 +17,14 @@
       function calcTotal(type, usdId, rateId, resultId) {
         const usd = parseFloat(document.getElementById(usdId).value) || 0;
         const rateInput = document.getElementById(rateId).value;
+        
+        // Update live text for USD input
+        const textElementId = usdId + 'Text';
+        const textElement = document.getElementById(textElementId);
+        if (textElement) {
+          textElement.innerText = usd > 0 ? (numberToArabicWords(usd) + " دولار أمريكي") : '';
+        }
+
         if (!type || (!currentRate && !rateInput)) return;
         
         const defaultPrice = currentRate ? (type === 'BUY' ? currentRate.buyPrice : currentRate.sellPrice) : 0;
@@ -24,8 +32,13 @@
         const price = rateInput ? (parseFloat(rateInput) / 100) : defaultPrice;
         
         const total = usd * price;
-        document.getElementById(resultId).innerHTML =
-          `المبلغ الإجمالي: <strong>${formatMoney(total)} دينار</strong> (بسعر ${formatMoney(price)})`;
+        if (total > 0) {
+          document.getElementById(resultId).innerHTML =
+            `<div style="font-size: 16px;">المبلغ الإجمالي: <strong>${formatMoney(total)} دينار</strong> (بسعر ${formatMoney(price)})</div>
+             <div style="font-size: 13px; font-weight: normal; margin-top: 4px; color: #555;">${numberToArabicWords(total)} دينار عراقي</div>`;
+        } else {
+          document.getElementById(resultId).innerHTML = '';
+        }
       }
 
       await loadRate();
@@ -55,8 +68,9 @@
               </div>
 
               <div class="form-group">
-                <label>المبلغ</label>
+                <label>المبلغ (دولار)</label>
                 <input type="number" id="buyUsdAmount" min="1" step="0.01" required placeholder="مثال: 500" />
+                <div id="buyUsdAmountText" style="color: #666; font-size: 12px; margin-top: 4px; min-height: 18px;"></div>
               </div>
 
               <div class="form-group">
@@ -90,8 +104,9 @@
               </div>
 
               <div class="form-group">
-                <label>المبلغ</label>
+                <label>المبلغ (دولار)</label>
                 <input type="number" id="sellUsdAmount" min="1" step="0.01" required placeholder="مثال: 500" />
+                <div id="sellUsdAmountText" style="color: #666; font-size: 12px; margin-top: 4px; min-height: 18px;"></div>
               </div>
 
               <div class="form-group">
