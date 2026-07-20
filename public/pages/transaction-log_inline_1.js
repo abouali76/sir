@@ -86,10 +86,10 @@
                       <td>${(state.page - 1) * state.limit + i + 1}</td>
                       <td><span class="badge ${t.type === 'BUY' ? 'badge-buy' : 'badge-sell'}">${t.type === 'BUY' ? 'شراء' : 'بيع'}</span></td>
                       <td>${t.customerName || '-'}</td>
-                      <td>${renderMoneyWithTafqeet(t.usdAmount, 'دولار')}</td>
-                      <td>${renderMoneyWithTafqeet(t.unitPrice, 'دينار')}</td>
-                      <td>${renderMoneyWithTafqeet(t.iqdAmount, 'دينار')}</td>
-                      <td>${t.type === 'SELL' ? renderMoneyWithTafqeet(t.profit, 'دينار') : '-'}</td>
+                      <td>$${formatMoney(t.usdAmount)}</td>
+                      <td>${formatMoney(t.unitPrice)}</td>
+                      <td>${formatMoney(t.iqdAmount)} د.ع</td>
+                      <td>${t.type === 'SELL' ? formatMoney(t.profit) + ' د.ع' : '-'}</td>
                       <td>${t.employee ? t.employee.fullName : '<span style="color:#e74c3c">مستخدم محذوف</span>'}</td>
                       <td>${formatDate(t.transactionDate)}</td>
                       <td>
