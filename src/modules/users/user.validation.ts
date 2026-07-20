@@ -2,9 +2,9 @@ import { z } from 'zod';
 
 export const createUserSchema = z.object({
   body: z.object({
-    username: z.string().min(3).max(50),
-    fullName: z.string().min(3).max(100),
-    password: z.string().min(8),
+    username: z.string().min(1, 'اسم المستخدم مطلوب'),
+    fullName: z.string().min(1, 'الاسم الكامل مطلوب'),
+    password: z.string().min(1, 'كلمة المرور مطلوبة'),
     role: z.enum(['ADMIN', 'EMPLOYEE']),
   }),
   query: z.object({}).optional(),
@@ -13,7 +13,7 @@ export const createUserSchema = z.object({
 
 export const updateUserSchema = z.object({
   body: z.object({
-    fullName: z.string().min(3).max(100).optional(),
+    fullName: z.string().min(1, 'الاسم الكامل مطلوب').optional(),
     role: z.enum(['ADMIN', 'EMPLOYEE']).optional(),
     isActive: z.boolean().optional(),
   }),
