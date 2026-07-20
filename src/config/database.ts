@@ -38,7 +38,7 @@ export async function connectDatabase(): Promise<void> {
     logger.info('✅ تم الاتصال بقاعدة البيانات بنجاح');
   } catch (error) {
     logger.error('❌ فشل الاتصال بقاعدة البيانات', error);
-    process.exit(1);
+    throw error;
   }
 }
 
