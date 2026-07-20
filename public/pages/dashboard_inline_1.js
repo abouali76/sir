@@ -124,12 +124,16 @@
           </div>
           
           ${me.role === 'ADMIN' ? `
-          <div style="margin-bottom: 24px;">
+          <div style="margin-bottom: 24px; display: flex; gap: 12px;">
             <button class="btn btn-primary" onclick="document.getElementById('addFundsModal').classList.add('show')">
               + إضافة أموال للخزينة
             </button>
+            <button class="btn btn-outline" style="border-color: #e74c3c; color: #e74c3c;" onclick="document.getElementById('removeFundsModal').classList.add('show')">
+              - سحب أموال من الخزينة
+            </button>
           </div>
 
+          <!-- Add Funds Modal -->
           <div class="modal-overlay" id="addFundsModal">
             <div class="modal">
               <div class="modal-header">
@@ -150,6 +154,32 @@
                 <div class="modal-actions">
                   <button type="submit" class="btn btn-primary">حفظ الإضافة</button>
                   <button type="button" class="btn btn-outline" onclick="document.getElementById('addFundsModal').classList.remove('show')">إلغاء</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Remove Funds Modal -->
+          <div class="modal-overlay" id="removeFundsModal">
+            <div class="modal">
+              <div class="modal-header">
+                <h3 style="color: #e74c3c;">سحب أموال من الخزينة</h3>
+                <button type="button" class="close-btn" onclick="document.getElementById('removeFundsModal').classList.remove('show')">&times;</button>
+              </div>
+              <form id="removeFundsForm">
+                <div style="display:flex; gap:16px; margin-bottom: 12px;">
+                  <div class="form-group" style="flex:1; margin-bottom: 0;">
+                    <label>المبلغ المراد سحبه بالدولار ($)</label>
+                    <input type="number" id="removeUsd" step="0.01" />
+                  </div>
+                  <div class="form-group" style="flex:1; margin-bottom: 0;">
+                    <label>المبلغ المراد سحبه بالدينار (د.ع)</label>
+                    <input type="number" id="removeIqd" step="0.01" />
+                  </div>
+                </div>
+                <div class="modal-actions">
+                  <button type="submit" class="btn btn-primary" style="background: #e74c3c; border: none;">تأكيد السحب</button>
+                  <button type="button" class="btn btn-outline" onclick="document.getElementById('removeFundsModal').classList.remove('show')">إلغاء</button>
                 </div>
               </form>
             </div>
@@ -235,6 +265,26 @@
                 window.location.reload();
               } catch (err) {
                 alert(err.message || 'حدث خطأ');
+                e.target.querySelector('button').disabled = false;
+              }
+            });
+          }
+
+          const removeForm = document.getElementById('removeFundsForm');
+          if (removeForm) {
+            removeForm.addEventListener('submit', async (e) => {
+              e.preventDefault();
+              try {
+                const btn = e.target.querySelector('button');
+                btn.disabled = true;
+                await api.post('/treasury/remove-funds', {
+                  usdAmount: document.getElementById('removeUsd').value || 0,
+                  iqdAmount: document.getElementById('removeIqd').value || 0
+                });
+                alert('تم سحب الأموال من الخزينة بنجاح');
+                window.location.reload();
+              } catch (err) {
+                alert(err.message || 'حدث خطأ أثناء سحب الأموال');
                 e.target.querySelector('button').disabled = false;
               }
             });

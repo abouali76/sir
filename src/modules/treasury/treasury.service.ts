@@ -39,6 +39,34 @@ export async function addFunds(usdAmount: number, iqdAmount: number, addedById: 
 
   return treasury;
 }
+export async function removeFunds(usdAmount: number, iqdAmount: number, removedById: number, ipAddress?: string) {
+  let treasury = await prisma.treasury.findFirst();
+  
+  if (!treasury) {
+    throw new Error("لا يوجد رصيد في الخزينة للسحب منه");
+  }
+
+  // Prevent negative balance if needed, or allow it depending on business logic. 
+  // We'll allow it or just subtract.
+  treasury = await prisma.treasury.update({
+    where: { id: treasury.id },
+    data: {
+      usdBalance: Number(treasury.usdBalance) - Number(usdAmount),
+      iqdBalance: Number(treasury.iqdBalance) - Number(iqdAmount)
+    }
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      userId: removedById,
+      action: "SETTINGS_UPDATE",
+      details: `سحب أموال من الخزينة: ${usdAmount} USD, ${iqdAmount} IQD`,
+      ipAddress
+    }
+  });
+
+  return treasury;
+}
 
 export async function getDashboardSummary() {
   const today = new Date();
