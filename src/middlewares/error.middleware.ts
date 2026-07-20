@@ -44,9 +44,31 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
     logger.warn(`${req.method} ${req.originalUrl} -> ${message}`);
   }
 
+  let finalMessage = message;
+  if (err instanceof Error && err.message !== message) {
+    finalMessage = `${message} - ${err.message}`;
+  }
+
+  // If we have validation details, append them to the message so they appear in UI alerts
+  if (details && Array.isArray(details)) {
+    const detailStrings = details.map((d: any) => {
+      let fieldName = d.field.replace('body.', '').replace('query.', '').replace('params.', '');
+      if (fieldName === 'password') fieldName = 'كلمة المرور';
+      if (fieldName === 'username') fieldName = 'اسم المستخدم';
+      if (fieldName === 'fullName') fieldName = 'الاسم الكامل';
+      if (fieldName === 'role') fieldName = 'الصلاحية';
+      
+      let msg = d.message;
+      if (msg.includes('String must contain at least 8 character')) msg = 'يجب أن لا تقل عن 8 أحرف';
+      if (msg.includes('String must contain at least 3 character')) msg = 'يجب أن لا تقل عن 3 أحرف';
+      return `${fieldName}: ${msg}`;
+    });
+    finalMessage = `${message}\n${detailStrings.join('\n')}`;
+  }
+
   res.status(statusCode).json({
     success: false,
-    message: `${message} - ${err instanceof Error ? err.message : String(err)}`,
+    message: finalMessage,
     ...(details ? { details } : {}),
     ...(env.isProduction ? {} : { stack: err instanceof Error ? err.stack : undefined }),
   });
