@@ -64,32 +64,11 @@
         body.innerHTML = `
           <div class="cards-grid">
             ${me.role === 'ADMIN' ? `
-            <div class="stat-card">
-              <div class="label">سعر شراء الدولار</div>
-              <div class="value">${data.currentBuyPrice ? formatMoney(data.currentBuyPrice) : '—'}</div>
-              <div class="sub" style="font-size: 13px; font-weight: bold; margin-top: 6px; color: var(--primary);">
-                ${data.currentBuyPrice ? tafqeet(data.currentBuyPrice) + ' دينار عراقي' : '—'}
-              </div>
-            </div>
-            <div class="stat-card accent">
-              <div class="label">سعر بيع الدولار</div>
-              <div class="value">${data.currentSellPrice ? formatMoney(data.currentSellPrice) : '—'}</div>
-              <div class="sub" style="font-size: 13px; font-weight: bold; margin-top: 6px; color: var(--primary);">
-                ${data.currentSellPrice ? tafqeet(data.currentSellPrice) + ' دينار عراقي' : '—'}
-              </div>
-            </div>
             <div class="stat-card success">
               <div class="label">أرباح اليوم</div>
               <div class="value">${formatMoney(data.todayProfit)}</div>
               <div class="sub" style="font-size: 13px; font-weight: bold; margin-top: 6px; color: var(--primary);">
                 ${tafqeet(data.todayProfit)} دينار عراقي
-              </div>
-            </div>
-            <div class="stat-card success">
-              <div class="label">أرباح الشهر</div>
-              <div class="value">${formatMoney(data.monthProfit)}</div>
-              <div class="sub" style="font-size: 13px; font-weight: bold; margin-top: 6px; color: var(--primary);">
-                ${tafqeet(data.monthProfit)} دينار عراقي
               </div>
             </div>
             ` : ''}
