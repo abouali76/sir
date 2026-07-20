@@ -81,9 +81,9 @@
                   </tr>
                 </thead>
                 <tbody>
-                  ${data.map((t) => `
+                  ${data.map((t, i) => `
                     <tr>
-                      <td>${t.id}</td>
+                      <td>${(state.page - 1) * state.limit + i + 1}</td>
                       <td><span class="badge ${t.type === 'BUY' ? 'badge-buy' : 'badge-sell'}">${t.type === 'BUY' ? 'شراء' : 'بيع'}</span></td>
                       <td>${t.customerName || '-'}</td>
                       <td>$${formatMoney(t.usdAmount)}</td>
