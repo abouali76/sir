@@ -45,9 +45,9 @@ async function renderLayout(activeKey, pageTitle) {
     <div class="app-layout">
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
-          <div class="icon">ص</div>
+          <div class="icon">س</div>
           <div>
-            <h2>نظام الصيرفة</h2>
+            <h2>السراج المنير</h2>
             <span>إدارة بيع وشراء العملة</span>
           </div>
         </div>
