@@ -24,6 +24,7 @@
               <option value="desc">تنازلي</option>
               <option value="asc">تصاعدي</option>
             </select>
+            ${isAdmin ? `<button class="btn btn-danger" style="margin-right: auto;" onclick="wipeAllTransactions()">تصفير السجل والصندوق بالكامل</button>` : ''}
           </div>
           <div id="tableContainer" class="table-wrap"><div class="loading">جاري التحميل...</div></div>
           <div class="pagination" id="pagination"></div>
@@ -134,6 +135,24 @@
           loadData();
         } catch (err) {
           alert(err.message);
+        }
+      };
+
+      window.wipeAllTransactions = async () => {
+        const password = prompt('تحذير خطير!\nهذا الإجراء سيقوم بمسح جميع العمليات وتصفير الصندوق (الخزينة النشطة) والأرباح بالكامل.\n(لن يتم تصفير الخزنة الرئيسية).\n\nإذا كنت متأكداً، اكتب "تصفير" للتأكيد:');
+        if (password !== 'تصفير') {
+          if (password !== null) alert('تم إلغاء العملية، الكلمة غير صحيحة.');
+          return;
+        }
+        
+        if (!confirm('تأكيد نهائي: هل أنت متأكد بنسبة 100% أنك تريد تصفير السجل؟ لا يمكن التراجع عن هذا الإجراء!')) return;
+        
+        try {
+          await api.post(`/transactions/wipe`, {});
+          alert('تم تصفير السجل والصندوق بنجاح.');
+          window.location.reload();
+        } catch (err) {
+          alert(err.message || 'حدث خطأ أثناء التصفير');
         }
       };
 

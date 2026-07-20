@@ -44,3 +44,8 @@ export const deleteTransaction = catchAsync(async (req: Request, res: Response) 
   await transactionService.deleteTransaction(id, req.user!.id, req.ip);
   sendSuccess(res, null, 'تم حذف العملية وعكس تأثيرها على الخزينة بنجاح');
 });
+
+export const wipeAllTransactions = catchAsync(async (req: Request, res: Response) => {
+  await transactionService.wipeAllTransactions(req.user!.id, req.ip);
+  sendSuccess(res, null, 'تم تصفير سجل العمليات والصندوق بنجاح');
+});

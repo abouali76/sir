@@ -19,6 +19,9 @@ router.get('/:id', transactionController.getTransactionById);
 router.post('/', validate(createTransactionSchema), transactionController.createTransaction);
 router.patch('/:id', validate(updateTransactionSchema), transactionController.updateTransaction);
 
+// تصفير شامل للمدير فقط
+router.post('/wipe', authorize("ADMIN"), transactionController.wipeAllTransactions);
+
 // الحذف للمدير فقط
 router.delete('/:id', authorize("ADMIN"), transactionController.deleteTransaction);
 

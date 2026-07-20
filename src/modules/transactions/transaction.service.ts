@@ -288,3 +288,38 @@ export async function deleteTransaction(id: number, deletedById: number, ipAddre
     return { success: true };
   });
 }
+
+/**
+ * مسح جميع العمليات (تصفير السجل، الصندوق، الأرباح) للمدير فقط
+ */
+export async function wipeAllTransactions(deletedById: number, ipAddress?: string) {
+  return prisma.$transaction(async (tx) => {
+    // 1) Delete all transactions (hard delete to actually clear the DB)
+    await tx.transaction.deleteMany({});
+
+    // 2) Delete all profit history
+    await tx.profitHistory.deleteMany({});
+
+    // 3) Reset the Active Treasury (usdBalance, iqdBalance, avgCostPrice)
+    // IMPORTANT: DO NOT RESET vaultUsdBalance and vaultIqdBalance!
+    await tx.treasury.updateMany({
+      data: {
+        usdBalance: 0,
+        iqdBalance: 0,
+        avgCostPrice: 0,
+      }
+    });
+
+    // 4) Log the action
+    await tx.auditLog.create({
+      data: {
+        userId: deletedById,
+        action: "SETTINGS_UPDATE",
+        details: "تصفير شامل لسجل العمليات والصندوق (الخزينة النشطة) والأرباح",
+        ipAddress,
+      },
+    });
+
+    return { success: true };
+  });
+}
