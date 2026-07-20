@@ -35,7 +35,7 @@
               </div>
               <div class="form-group" id="passwordGroup">
                 <label>كلمة المرور</label>
-                <input type="password" id="password" />
+                <input type="password" id="password" autocomplete="new-password" />
               </div>
               <div class="form-group">
                 <label>الصلاحية</label>
