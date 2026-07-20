@@ -22,5 +22,5 @@ export const updateUser = catchAsync(async (req: Request, res: Response) => {
 export const deleteUser = catchAsync(async (req: Request, res: Response) => {
   const id = parseInt(req.params.id, 10);
   await userService.deleteUser(id, req.user!.id);
-  sendSuccess(res, null, 'تم تعطيل المستخدم بنجاح');
+  sendSuccess(res, null, 'تم حذف المستخدم بنجاح');
 });

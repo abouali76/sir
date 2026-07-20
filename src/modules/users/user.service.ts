@@ -100,14 +100,33 @@ export async function deleteUser(id: number, deletedByUserId: number) {
     throw ApiError.badRequest('لا يمكنك حذف حسابك الخاص');
   }
 
-  // تعطيل بدل الحذف الفعلي للحفاظ على سلامة السجلات التاريخية (Transactions مرتبطة به)
-  await prisma.user.update({ where: { id }, data: { isActive: false } });
-
-  await prisma.auditLog.create({
-    data: {
-      userId: deletedByUserId,
-      action: "USER_DELETE",
-      details: `تم تعطيل المستخدم: ${user.username}`,
-    },
-  });
+  try {
+    // محاولة الحذف الفعلي من قاعدة البيانات
+    await prisma.user.delete({ where: { id } });
+    
+    await prisma.auditLog.create({
+      data: {
+        userId: deletedByUserId,
+        action: "USER_DELETE",
+        details: `تم حذف المستخدم نهائياً: ${user.username}`,
+      },
+    });
+  } catch (error: any) {
+    // P2003 means foreign key constraint failed
+    if (error.code === 'P2003') {
+      // تعطيل بدل الحذف الفعلي لأن المستخدم لديه سجلات مرتبطة
+      await prisma.user.update({ where: { id }, data: { isActive: false } });
+      
+      await prisma.auditLog.create({
+        data: {
+          userId: deletedByUserId,
+          action: "USER_DELETE",
+          details: `تم تعطيل المستخدم (لا يمكن حذفه لوجود عمليات مرتبطة): ${user.username}`,
+        },
+      });
+      
+      throw ApiError.badRequest('لا يمكن حذف المستخدم نهائياً لوجود عمليات مالية أو سجلات مرتبطة به. تم تعطيل حسابه بدلاً من ذلك.');
+    }
+    throw error;
+  }
 }
