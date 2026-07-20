@@ -25,7 +25,15 @@ export function createApp(): Application {
   // ===== الأمان =====
   app.use(
     helmet({
-      contentSecurityPolicy: false, // تعطيل سياسة الأمان للسماح بالنصوص البرمجية المدمجة (inline scripts)
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", "data:", "blob:"],
+          connectSrc: ["'self'"],
+        },
+      },
     })
   );
   app.use(
