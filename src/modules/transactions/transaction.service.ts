@@ -65,13 +65,6 @@ export async function createTransaction(input: CreateTransactionInput, employeeI
         );
       }
       
-      const currentUsd = Number(treasury.usdBalance);
-      if (usdAmount < 0 && currentUsd < Math.abs(usdAmount)) {
-        throw ApiError.badRequest(
-          `رصيد الدولار في الخزينة (${currentUsd.toLocaleString()}$) غير كافٍ لسحب ${Math.abs(usdAmount).toLocaleString()}$ (شراء عكسي)`
-        );
-      }
-
       // Calculate new weighted average cost
       newAvgCost = calculateNewWeightedAverage(
         treasury.usdBalance,
@@ -88,13 +81,6 @@ export async function createTransaction(input: CreateTransactionInput, employeeI
       if (usdAmount > 0 && currentUsd < usdAmount) {
         throw ApiError.badRequest(
           `رصيد الدولار في الخزينة (${currentUsd.toLocaleString()}$) غير كافٍ لإتمام عملية البيع بمبلغ ${usdAmount.toLocaleString()}$`
-        );
-      }
-      
-      const currentIqd = Number(treasury.iqdBalance);
-      if (usdAmount < 0 && currentIqd < Math.abs(iqdAmount)) {
-        throw ApiError.badRequest(
-          `رصيد الدينار في الخزينة (${currentIqd.toLocaleString()}) غير كافٍ لسحب ${Math.abs(iqdAmount).toLocaleString()} دينار (بيع عكسي)`
         );
       }
 
