@@ -150,6 +150,9 @@
         const sellRate100 = currentRate.sellPrice * 100;
         document.getElementById('buyCustomRate').value = buyRate100;
         document.getElementById('sellCustomRate').value = sellRate100;
+        
+        calcTotal('BUY', 'buyUsdAmount', 'buyCustomRate', 'buyCalcResult');
+        calcTotal('SELL', 'sellUsdAmount', 'sellCustomRate', 'sellCalcResult');
       }
 
       // Live calculation
