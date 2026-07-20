@@ -1,0 +1,126 @@
+(async function init() {
+      const me = await renderLayout('reports', 'التقارير');
+      if (!me) return;
+      if (me.role !== 'ADMIN') {
+        document.getElementById('pageBody').innerHTML = `<div class="error-msg show">هذه الصفحة مخصصة للمدير فقط</div>`;
+        return;
+      }
+
+      const body = document.getElementById('pageBody');
+      const periods = [
+        { key: 'today', label: 'اليوم' },
+        { key: 'week', label: 'الأسبوع' },
+        { key: 'month', label: 'الشهر' },
+        { key: 'year', label: 'السنة' },
+        { key: 'all', label: 'الإجمالي الكلي' },
+      ];
+
+      body.innerHTML = `
+        <div class="panel">
+          <div class="panel-header" style="margin-bottom: 20px;">
+            <h3>📊 تقرير الأرباح وحركة الأموال</h3>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-size:14px; color:var(--text-light);">حدد الفترة:</span>
+              <select id="periodSelect" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--accent); background: var(--surface); color: var(--text); font-weight: 600; outline: none; cursor: pointer;">
+                ${periods.map((p) => `<option value="${p.key}">${p.label}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div id="reportBox" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;"><div class="loading">جاري التحميل...</div></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><h3>تصدير سجل العمليات (Excel / PDF)</h3></div>
+          <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; background: var(--bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
+            <label style="flex:1; min-width: 200px; display:flex; flex-direction:column; gap:6px;">
+              <span style="font-size:14px; font-weight:600; color:var(--text-light);">📅 من تاريخ:</span>
+              <input type="date" id="fromDate" style="padding: 8px 12px; border-radius:6px; border:1px solid var(--border); background:var(--surface); color:var(--text);"/>
+            </label>
+            <label style="flex:1; min-width: 200px; display:flex; flex-direction:column; gap:6px;">
+              <span style="font-size:14px; font-weight:600; color:var(--text-light);">📅 إلى تاريخ:</span>
+              <input type="date" id="toDate" style="padding: 8px 12px; border-radius:6px; border:1px solid var(--border); background:var(--surface); color:var(--text);"/>
+            </label>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-success" id="exportExcelBtn" style="display:flex; align-items:center; gap:8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                تصدير Excel
+              </button>
+              <button class="btn btn-danger" id="exportPdfBtn" style="display:flex; align-items:center; gap:8px; background: #c0392b;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15h2a2 2 0 0 1 0 4H9z"/><path d="M9 15v8"/><path d="M16 15h-2v8"/><path d="M14 19h2"/></svg>
+                تصدير PDF
+              </button>
+            </div>
+          </div>
+          <p style="font-size:12.5px;color:var(--text-muted);">
+            ملاحظة: ملف PDF يُصدَّر حاليًا بعناوين إنجليزية بسبب قيد تقني في دعم تشكيل الحروف العربية داخل مكتبة PDF المستخدمة. ملف Excel يدعم العربية بالكامل.
+          </p>
+        </div>
+      `;
+
+      async function loadReport(period) {
+        const box = document.getElementById('reportBox');
+        box.innerHTML = `<div class="loading">جاري التحميل...</div>`;
+        try {
+          const { data } = await api.get(`/reports/profit?period=${period}`);
+          box.innerHTML = `
+            <div style="width: 100%; display:flex; justify-content:center; margin-bottom: 10px;">
+              <div class="stat-card" style="background: linear-gradient(135deg, #dcb95e, #f9f1d8); color: #0c4a32; width: 100%; max-width: 400px; text-align: center; border: 1px solid #c5a059; transform: none; cursor: default; align-items: center;">
+                <div class="label" style="color: #0c4a32; font-size: 16px; font-weight: 800;">إجمالي الأرباح</div>
+                <div class="value" style="font-size: 32px; margin: 10px 0; color: #0c4a32; justify-content: center;">${formatMoney(data.totalProfit)} د.ع</div>
+                <div class="sub" style="color: rgba(12,74,50,0.8); border-top-color: rgba(12,74,50,0.2);">صافي الربح للفترة المحددة</div>
+              </div>
+            </div>
+            
+            <div class="stat-card" style="width: 230px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; flex: none;">
+              <div class="icon" style="background: rgba(46,204,113,0.1); font-size: 24px; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin: 0 auto 15px auto;">⬇️</div>
+              <div class="label" style="text-align: center; width: 100%;">إجمالي شراء الدولار</div>
+              <div class="value" style="display: flex; justify-content: center; text-align: center; width: 100%;">$${formatMoney(data.totalBuyUsd)}</div>
+              <div class="sub" style="text-align: center; width: 100%; color: var(--text-muted);">${data.buyCount} عملية شراء</div>
+            </div>
+            
+            <div class="stat-card" style="width: 230px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; flex: none;">
+              <div class="icon" style="background: rgba(231,76,60,0.1); font-size: 24px; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin: 0 auto 15px auto;">⬆️</div>
+              <div class="label" style="text-align: center; width: 100%;">إجمالي بيع الدولار</div>
+              <div class="value" style="display: flex; justify-content: center; text-align: center; width: 100%;">$${formatMoney(data.totalSellUsd)}</div>
+              <div class="sub" style="text-align: center; width: 100%; color: var(--text-muted);">${data.sellCount} عملية بيع</div>
+            </div>
+            
+            <div class="stat-card" style="width: 230px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; flex: none;">
+              <div class="icon" style="background: rgba(52,152,219,0.1); font-size: 24px; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin: 0 auto 15px auto;">💵</div>
+              <div class="label" style="text-align: center; width: 100%;">المدفوع للشراء (د.ع)</div>
+              <div class="value" style="display: flex; justify-content: center; text-align: center; width: 100%;">${formatMoney(data.totalBuyIqd)}</div>
+              <div class="sub" style="text-align: center; width: 100%; color: var(--text-muted);">إجمالي رأس المال المصروف</div>
+            </div>
+            
+            <div class="stat-card" style="width: 230px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; flex: none;">
+              <div class="icon" style="background: rgba(155,89,182,0.1); font-size: 24px; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin: 0 auto 15px auto;">💰</div>
+              <div class="label" style="text-align: center; width: 100%;">المقبوض للبيع (د.ع)</div>
+              <div class="value" style="display: flex; justify-content: center; text-align: center; width: 100%;">${formatMoney(data.totalSellIqd)}</div>
+              <div class="sub" style="text-align: center; width: 100%; color: var(--text-muted);">إجمالي المبالغ المستلمة</div>
+            </div>
+          `;
+        } catch (err) {
+          box.innerHTML = `<div class="error-msg show">${err.message}</div>`;
+        }
+      }
+
+      document.getElementById('periodSelect').addEventListener('change', (e) => loadReport(e.target.value));
+
+      function buildQuery() {
+        const from = document.getElementById('fromDate').value;
+        const to = document.getElementById('toDate').value;
+        const params = new URLSearchParams();
+        if (from) params.set('from', from);
+        if (to) params.set('to', to);
+        return params.toString();
+      }
+
+      document.getElementById('exportExcelBtn').addEventListener('click', () => {
+        window.location.href = `/api/reports/export/excel?${buildQuery()}`;
+      });
+      document.getElementById('exportPdfBtn').addEventListener('click', () => {
+        window.location.href = `/api/reports/export/pdf?${buildQuery()}`;
+      });
+
+      loadReport('today');
+    })();
