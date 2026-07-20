@@ -79,6 +79,7 @@
               <div class="sub" style="font-size: 13px; font-weight: bold; margin-top: 6px; color: var(--primary);">
                 ${tafqeet(data.usdBalance)} دولار أمريكي
               </div>
+              ${data.usdDebt > 0 ? `<div style="font-size: 12px; color: #e74c3c; font-weight: bold; margin-top: 8px;">مطلوب للخزنة: $${formatMoney(data.usdDebt)}</div>` : ''}
             </div>
             <div class="stat-card">
               <div class="label">رصيد الصندوق (دينار)</div>
@@ -86,6 +87,7 @@
               <div class="sub" style="font-size: 13px; font-weight: bold; margin-top: 6px; color: var(--primary);">
                 ${tafqeet(data.iqdBalance)} دينار عراقي
               </div>
+              ${data.iqdDebt > 0 ? `<div style="font-size: 12px; color: #e74c3c; font-weight: bold; margin-top: 8px;">مطلوب للخزنة: ${formatMoney(data.iqdDebt)} د.ع</div>` : ''}
             </div>
 
             ${me.role === 'ADMIN' ? `

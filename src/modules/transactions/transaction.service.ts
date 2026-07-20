@@ -56,9 +56,35 @@ export async function createTransaction(input: CreateTransactionInput, employeeI
     
     const iqdAmount = Math.round(unitPrice * usdAmount * 100) / 100;
 
+    let vaultUsdBalance = Number(treasury.vaultUsdBalance);
+    let vaultIqdBalance = Number(treasury.vaultIqdBalance);
+    let usdDebt = Number(treasury.usdDebt || 0);
+    let iqdDebt = Number(treasury.iqdDebt || 0);
+
     if (type === "BUY") {
-      // شراء دولار: يزيد رصيد الدولار، ينقص رصيد الدينار
+      // شراء دولار: نعطي دينار، نستلم دولار
       
+      // 1. معالجة سحب الدينار (Outgoing)
+      const currentIqd = Number(treasury.iqdBalance);
+      if (currentIqd >= iqdAmount) {
+        newIqdBalance = currentIqd - iqdAmount;
+      } else {
+        newIqdBalance = 0;
+        const shortfall = iqdAmount - currentIqd;
+        vaultIqdBalance -= shortfall;
+        iqdDebt += shortfall;
+      }
+
+      // 2. معالجة استلام الدولار (Incoming)
+      if (usdDebt > 0) {
+        const payback = Math.min(usdAmount, usdDebt);
+        vaultUsdBalance += payback;
+        usdDebt -= payback;
+        newUsdBalance = Number(treasury.usdBalance) + (usdAmount - payback);
+      } else {
+        newUsdBalance = Number(treasury.usdBalance) + usdAmount;
+      }
+
       // Calculate new weighted average cost
       newAvgCost = calculateNewWeightedAverage(
         treasury.usdBalance,
@@ -66,18 +92,34 @@ export async function createTransaction(input: CreateTransactionInput, employeeI
         usdAmount,
         unitPrice
       );
-
-      newUsdBalance = Number(treasury.usdBalance) + Number(usdAmount);
-      newIqdBalance = Number(treasury.iqdBalance) - Number(iqdAmount);
     } else {
-      // بيع دولار: ينقص رصيد الدولار، يزيد رصيد الدينار
+      // بيع دولار: نعطي دولار، نستلم دينار
+      
+      // 1. معالجة سحب الدولار (Outgoing)
+      const currentUsd = Number(treasury.usdBalance);
+      if (currentUsd >= usdAmount) {
+        newUsdBalance = currentUsd - usdAmount;
+      } else {
+        newUsdBalance = 0;
+        const shortfall = usdAmount - currentUsd;
+        vaultUsdBalance -= shortfall;
+        usdDebt += shortfall;
+      }
+
+      // 2. معالجة استلام الدينار (Incoming)
+      if (iqdDebt > 0) {
+        const payback = Math.min(iqdAmount, iqdDebt);
+        vaultIqdBalance += payback;
+        iqdDebt -= payback;
+        newIqdBalance = Number(treasury.iqdBalance) + (iqdAmount - payback);
+      } else {
+        newIqdBalance = Number(treasury.iqdBalance) + iqdAmount;
+      }
+
       costBasisAvg = Number(treasury.avgCostPrice);
       
       // Calculate profit using the weighted average cost
       profit = calculateSellProfit(unitPrice, costBasisAvg, usdAmount);
-
-      newUsdBalance = Number(treasury.usdBalance) - Number(usdAmount);
-      newIqdBalance = Number(treasury.iqdBalance) + Number(iqdAmount);
     }
 
     // 4) تحديث الخزينة
@@ -86,6 +128,10 @@ export async function createTransaction(input: CreateTransactionInput, employeeI
       data: {
         usdBalance: newUsdBalance,
         iqdBalance: newIqdBalance,
+        vaultUsdBalance: vaultUsdBalance,
+        vaultIqdBalance: vaultIqdBalance,
+        usdDebt: usdDebt,
+        iqdDebt: iqdDebt,
         avgCostPrice: newAvgCost,
       },
     });

@@ -140,6 +140,8 @@ model Treasury {
   iqdBalance      Float    @default(0) 
   vaultUsdBalance Float    @default(0)
   vaultIqdBalance Float    @default(0)
+  usdDebt         Float    @default(0) // ديون الدولار المستحقة للخزنة
+  iqdDebt         Float    @default(0) // ديون الدينار المستحقة للخزنة
   // متوسط تكلفة الدولار الحالي في الخزينة (Weighted Average Cost)
   avgCostPrice    Float    @default(0) 
   updatedAt       DateTime @updatedAt

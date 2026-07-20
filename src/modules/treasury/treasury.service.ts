@@ -188,6 +188,8 @@ export async function getDashboardSummary() {
     iqdBalance: treasury?.iqdBalance ?? 0,
     vaultUsdBalance: treasury?.vaultUsdBalance ?? 0,
     vaultIqdBalance: treasury?.vaultIqdBalance ?? 0,
+    usdDebt: treasury?.usdDebt ?? 0,
+    iqdDebt: treasury?.iqdDebt ?? 0,
     avgCostPrice: treasury?.avgCostPrice ?? 0,
     lastTransactions,
   };

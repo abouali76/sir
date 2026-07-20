@@ -106,7 +106,7 @@ export async function exportToExcel(from?: string, to?: string): Promise<ExcelJS
       unitPrice: Number(t.unitPrice),
       iqdAmount: Number(t.iqdAmount),
       profit: Number(t.profit),
-      employee: t.employee.fullName,
+      employee: t.employee?.fullName ?? 'مستخدم محذوف',
     });
   });
 
@@ -157,7 +157,7 @@ export async function exportToPDF(from?: string, to?: string): Promise<Buffer> {
         String(t.unitPrice),
         String(t.iqdAmount),
         String(t.profit),
-        t.employee.fullName,
+        t.employee?.fullName ?? 'مستخدم محذوف',
       ];
       row.forEach((cell, i) => {
         doc.text(cell, x, y, { width: colWidths[i] });
