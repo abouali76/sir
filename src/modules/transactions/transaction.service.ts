@@ -343,6 +343,8 @@ export async function wipeAllTransactions(deletedById: number, ipAddress?: strin
       data: {
         usdBalance: 0,
         iqdBalance: 0,
+        usdDebt: 0,
+        iqdDebt: 0,
         avgCostPrice: 0,
       }
     });
