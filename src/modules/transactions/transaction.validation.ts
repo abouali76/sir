@@ -5,7 +5,7 @@ export const createTransactionSchema = z.object({
     type: z.enum(['BUY', 'SELL']),
     customerName: z.string().max(100).optional(),
     customerPhone: z.string().max(20).optional(),
-    usdAmount: z.number().refine(val => val !== 0, { message: 'المبلغ لا يمكن أن يكون صفرًا' }),
+    usdAmount: z.number().positive({ message: 'المبلغ يجب أن يكون رقماً موجباً أكبر من الصفر' }),
     customRate: z.number().positive().optional(),
     notes: z.string().max(500).optional(),
   }),

@@ -142,11 +142,11 @@ export async function removeVaultFunds(usdAmount: number, iqdAmount: number, rem
 
 export async function getDashboardSummary() {
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  today.setUTCHours(0, 0, 0, 0);
 
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
 
-  const [currentRate, treasury, todayProfitAgg, monthProfitAgg, todayTxCount, lastTransactions] =
+  const [currentRate, treasury, todayProfitAgg, monthProfitAgg, todayTxCount, todayBuyAgg, todaySellAgg, lastBuys, lastSells] =
     await Promise.all([
       prisma.exchangeRate.findFirst({ where: { isActive: true }, orderBy: { createdAt: 'desc' } }),
       prisma.treasury.findFirst(),
@@ -163,13 +163,29 @@ export async function getDashboardSummary() {
         where: { transactionDate: { gte: today }, isDeleted: false },
         _count: { _all: true },
       }),
+      prisma.transaction.aggregate({
+        where: { transactionDate: { gte: today }, isDeleted: false, type: 'BUY' },
+        _sum: { usdAmount: true },
+      }),
+      prisma.transaction.aggregate({
+        where: { transactionDate: { gte: today }, isDeleted: false, type: 'SELL' },
+        _sum: { usdAmount: true },
+      }),
       prisma.transaction.findMany({
-        where: { isDeleted: false },
+        where: { isDeleted: false, type: 'BUY' },
         orderBy: { transactionDate: 'desc' },
-        take: 10,
+        take: 5,
+        include: { employee: { select: { fullName: true } } },
+      }),
+      prisma.transaction.findMany({
+        where: { isDeleted: false, type: 'SELL' },
+        orderBy: { transactionDate: 'desc' },
+        take: 5,
         include: { employee: { select: { fullName: true } } },
       }),
     ]);
+
+  const lastTransactions = [...lastBuys, ...lastSells].sort((a, b) => b.transactionDate.getTime() - a.transactionDate.getTime());
 
   const buyCount = todayTxCount.find((t) => t.type === 'BUY')?._count._all ?? 0;
   const sellCount = todayTxCount.find((t) => t.type === 'SELL')?._count._all ?? 0;
@@ -184,6 +200,8 @@ export async function getDashboardSummary() {
     monthProfit: monthNetProfit,
     buyCountToday: buyCount,
     sellCountToday: sellCount,
+    todayBuyUsd: todayBuyAgg?._sum.usdAmount ?? 0,
+    todaySellUsd: todaySellAgg?._sum.usdAmount ?? 0,
     usdBalance: treasury?.usdBalance ?? 0,
     iqdBalance: treasury?.iqdBalance ?? 0,
     vaultUsdBalance: treasury?.vaultUsdBalance ?? 0,

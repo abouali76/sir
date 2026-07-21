@@ -74,6 +74,15 @@
             ` : ''}
 
             <div class="stat-card">
+              <div class="label">مشتريات اليوم (دولار)</div>
+              <div class="value" style="font-size: 24px; color: #2ecc71;">${formatMoney(data.todayBuyUsd || 0)}</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">مبيعات اليوم (دولار)</div>
+              <div class="value" style="font-size: 24px; color: #e74c3c;">${formatMoney(data.todaySellUsd || 0)}</div>
+            </div>
+
+            <div class="stat-card">
               <div class="label">رصيد الصندوق (دولار)</div>
               <div class="value" style="font-size: 24px;">$${formatMoney(data.usdBalance)}</div>
               <div class="sub" style="font-size: 13px; font-weight: bold; margin-top: 6px; color: var(--primary);">

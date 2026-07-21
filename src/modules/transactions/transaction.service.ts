@@ -35,7 +35,8 @@ export async function createTransaction(input: CreateTransactionInput, employeeI
     }
 
     // 2) جلب سجل الخزينة (نفترض سجل واحد فقط في هذا النظام)
-    let treasury = await tx.treasury.findFirst();
+    const treasuries = await tx.$queryRaw<any[]>`SELECT * FROM "treasury" LIMIT 1 FOR UPDATE`;
+    let treasury = treasuries && treasuries.length > 0 ? treasuries[0] : null;
     if (!treasury) {
       treasury = await tx.treasury.create({ data: { usdBalance: 0, iqdBalance: 0, avgCostPrice: 0 } });
     }
@@ -267,7 +268,8 @@ export async function deleteTransaction(id: number, deletedById: number, ipAddre
     const transaction = await tx.transaction.findFirst({ where: { id, isDeleted: false } });
     if (!transaction) throw ApiError.notFound('العملية غير موجودة أو محذوفة مسبقًا');
 
-    const treasury = await tx.treasury.findFirst();
+    const treasuries = await tx.$queryRaw<any[]>`SELECT * FROM "treasury" LIMIT 1 FOR UPDATE`;
+    const treasury = treasuries && treasuries.length > 0 ? treasuries[0] : null;
     if (!treasury) throw ApiError.internal('لا يوجد سجل خزينة');
 
     // عكس التأثير على الخزينة
@@ -277,6 +279,7 @@ export async function deleteTransaction(id: number, deletedById: number, ipAddre
     let vaultIqdBalance = Number(treasury.vaultIqdBalance);
     let usdDebt = Number(treasury.usdDebt);
     let iqdDebt = Number(treasury.iqdDebt);
+    let newAvgCost = Number(treasury.avgCostPrice);
 
     const txUsdAmount = Number(transaction.usdAmount);
     const txIqdAmount = Number(transaction.iqdAmount);
