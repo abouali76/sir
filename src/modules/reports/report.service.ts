@@ -8,16 +8,16 @@ function getDateRange(period: 'today' | 'week' | 'month' | 'year' | 'all') {
 
   switch (period) {
     case 'today':
-      start.setHours(0, 0, 0, 0);
+      start.setUTCHours(0, 0, 0, 0);
       break;
     case 'week':
-      start.setDate(now.getDate() - 7);
+      start.setUTCDate(now.getUTCDate() - 7);
       break;
     case 'month':
-      start.setMonth(now.getMonth() - 1);
+      start.setUTCMonth(now.getUTCMonth() - 1);
       break;
     case 'year':
-      start.setFullYear(now.getFullYear() - 1);
+      start.setUTCFullYear(now.getUTCFullYear() - 1);
       break;
     case 'all':
       return null;

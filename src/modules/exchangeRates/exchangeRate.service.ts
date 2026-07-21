@@ -47,18 +47,26 @@ export async function getRateHistory(limit = 50) {
 }
 
 export async function deleteRate(id: number, deletedById: number, ipAddress?: string) {
-  const rate = await prisma.exchangeRate.findUnique({ where: { id } });
+  const rate = await prisma.exchangeRate.findUnique({ 
+    where: { id },
+    include: { _count: { select: { transactions: true } } }
+  });
+  
   if (!rate) throw ApiError.notFound('السعر غير موجود');
+
+  // Prevent deletion if there are transactions attached to preserve financial history
+  if (rate._count.transactions > 0) {
+    throw ApiError.badRequest('لا يمكن حذف هذا السعر لأنه مرتبط بعمليات سابقة. يمكنك إلغاء تنشيطه بدلاً من ذلك.');
+  }
 
   try {
     await prisma.$transaction(async (tx) => {
-      await tx.transaction.deleteMany({ where: { exchangeRateId: id } });
       await tx.exchangeRate.delete({ where: { id } });
       await tx.auditLog.create({
         data: {
           userId: deletedById,
           action: "PRICE_UPDATE",
-          details: `حذف السعر مع عملياته المرتبطة: شراء=${rate.buyPrice}, بيع=${rate.sellPrice}`,
+          details: `حذف السعر: شراء=${rate.buyPrice}, بيع=${rate.sellPrice}`,
           ipAddress,
         },
       });

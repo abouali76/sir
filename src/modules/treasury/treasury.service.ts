@@ -8,136 +8,143 @@ export async function getTreasuryBalance() {
 }
 
 export async function addFunds(usdAmount: number, iqdAmount: number, addedById: number, ipAddress?: string) {
-  let treasury = await prisma.treasury.findFirst();
-  const currentRate = await prisma.exchangeRate.findFirst({ where: { isActive: true }, orderBy: { createdAt: 'desc' } });
-  const defaultBuyPrice = currentRate ? currentRate.buyPrice : 0;
-  
-  if (!treasury) {
-    treasury = await prisma.treasury.create({
-      data: {
-        usdBalance: usdAmount,
-        iqdBalance: iqdAmount,
-        avgCostPrice: defaultBuyPrice
+  return prisma.$transaction(async (tx) => {
+    const activeRate = await tx.exchangeRate.findFirst({ where: { isActive: true }, orderBy: { createdAt: 'desc' } });
+    const defaultBuyPrice = activeRate ? activeRate.buyPrice : 0;
+
+    const treasuries = await tx.$queryRaw<any[]>`SELECT * FROM "treasury" LIMIT 1 FOR UPDATE`;
+    let treasury = treasuries && treasuries.length > 0 ? treasuries[0] : null;
+
+    if (!treasury) {
+      treasury = await tx.treasury.create({
+        data: {
+          usdBalance: usdAmount,
+          iqdBalance: iqdAmount,
+          avgCostPrice: defaultBuyPrice
+        }
+      });
+    } else {
+      let newAvgCost = Number(treasury.avgCostPrice);
+      if (newAvgCost === 0 && usdAmount > 0) {
+        newAvgCost = defaultBuyPrice;
       }
-    });
-  } else {
-    // If there is currently 0 avgCostPrice and we're adding USD, initialize it to the current buy price
-    // to prevent 100% false profits on the next sell.
-    let newAvgCost = treasury.avgCostPrice;
-    if (newAvgCost === 0 && usdAmount > 0) {
-      newAvgCost = defaultBuyPrice;
+
+      treasury = await tx.treasury.update({
+        where: { id: treasury.id },
+        data: {
+          usdBalance: Number(treasury.usdBalance) + Number(usdAmount),
+          iqdBalance: Number(treasury.iqdBalance) + Number(iqdAmount),
+          avgCostPrice: newAvgCost
+        }
+      });
     }
 
-    treasury = await prisma.treasury.update({
-      where: { id: treasury.id },
+    await tx.auditLog.create({
       data: {
-        usdBalance: Number(treasury.usdBalance) + Number(usdAmount),
-        iqdBalance: Number(treasury.iqdBalance) + Number(iqdAmount),
-        avgCostPrice: newAvgCost
+        userId: addedById,
+        action: "SETTINGS_UPDATE",
+        details: `إضافة أموال للخزينة: ${usdAmount} USD, ${iqdAmount} IQD`,
+        ipAddress
       }
     });
-  }
 
-  await prisma.auditLog.create({
-    data: {
-      userId: addedById,
-      action: "SETTINGS_UPDATE",
-      details: `إضافة أموال للخزينة: ${usdAmount} USD, ${iqdAmount} IQD`,
-      ipAddress
-    }
+    return treasury;
   });
-
-  return treasury;
 }
 export async function removeFunds(usdAmount: number, iqdAmount: number, removedById: number, ipAddress?: string) {
-  let treasury = await prisma.treasury.findFirst();
-  
-  if (!treasury) {
-    throw new Error("لا يوجد رصيد في الخزينة للسحب منه");
-  }
-
-  // Prevent negative balance if needed, or allow it depending on business logic. 
-  // We'll allow it or just subtract.
-  treasury = await prisma.treasury.update({
-    where: { id: treasury.id },
-    data: {
-      usdBalance: Number(treasury.usdBalance) - Number(usdAmount),
-      iqdBalance: Number(treasury.iqdBalance) - Number(iqdAmount)
+  return prisma.$transaction(async (tx) => {
+    const treasuries = await tx.$queryRaw<any[]>`SELECT * FROM "treasury" LIMIT 1 FOR UPDATE`;
+    let treasury = treasuries && treasuries.length > 0 ? treasuries[0] : null;
+    
+    if (!treasury) {
+      throw new Error("لا يوجد رصيد في الخزينة للسحب منه");
     }
-  });
 
-  await prisma.auditLog.create({
-    data: {
-      userId: removedById,
-      action: "SETTINGS_UPDATE",
-      details: `سحب أموال من الخزينة: ${usdAmount} USD, ${iqdAmount} IQD`,
-      ipAddress
-    }
-  });
+    treasury = await tx.treasury.update({
+      where: { id: treasury.id },
+      data: {
+        usdBalance: Number(treasury.usdBalance) - Number(usdAmount),
+        iqdBalance: Number(treasury.iqdBalance) - Number(iqdAmount)
+      }
+    });
 
-  return treasury;
+    await tx.auditLog.create({
+      data: {
+        userId: removedById,
+        action: "SETTINGS_UPDATE",
+        details: `سحب أموال من الخزينة: ${usdAmount} USD, ${iqdAmount} IQD`,
+        ipAddress
+      }
+    });
+
+    return treasury;
+  });
 }
 
 export async function addVaultFunds(usdAmount: number, iqdAmount: number, addedById: number, ipAddress?: string) {
-  let treasury = await prisma.treasury.findFirst();
-  
-  if (!treasury) {
-    treasury = await prisma.treasury.create({
-      data: {
-        usdBalance: 0,
-        iqdBalance: 0,
-        vaultUsdBalance: usdAmount,
-        vaultIqdBalance: iqdAmount,
-        avgCostPrice: 0
-      }
-    });
-  } else {
-    treasury = await prisma.treasury.update({
-      where: { id: treasury.id },
-      data: {
-        vaultUsdBalance: Number(treasury.vaultUsdBalance) + Number(usdAmount),
-        vaultIqdBalance: Number(treasury.vaultIqdBalance) + Number(iqdAmount)
-      }
-    });
-  }
-
-  await prisma.auditLog.create({
-    data: {
-      userId: addedById,
-      action: "SETTINGS_UPDATE",
-      details: `إضافة أموال للخزنة الرئيسية: ${usdAmount} USD, ${iqdAmount} IQD`,
-      ipAddress
+  return prisma.$transaction(async (tx) => {
+    const treasuries = await tx.$queryRaw<any[]>`SELECT * FROM "treasury" LIMIT 1 FOR UPDATE`;
+    let treasury = treasuries && treasuries.length > 0 ? treasuries[0] : null;
+    
+    if (!treasury) {
+      treasury = await tx.treasury.create({
+        data: {
+          usdBalance: 0, iqdBalance: 0,
+          vaultUsdBalance: usdAmount, vaultIqdBalance: iqdAmount,
+          avgCostPrice: 0
+        }
+      });
+    } else {
+      treasury = await tx.treasury.update({
+        where: { id: treasury.id },
+        data: {
+          vaultUsdBalance: Number(treasury.vaultUsdBalance) + Number(usdAmount),
+          vaultIqdBalance: Number(treasury.vaultIqdBalance) + Number(iqdAmount)
+        }
+      });
     }
-  });
 
-  return treasury;
+    await tx.auditLog.create({
+      data: {
+        userId: addedById,
+        action: "SETTINGS_UPDATE",
+        details: `إضافة أموال للخزنة الرئيسية: ${usdAmount} USD, ${iqdAmount} IQD`,
+        ipAddress
+      }
+    });
+
+    return treasury;
+  });
 }
 
 export async function removeVaultFunds(usdAmount: number, iqdAmount: number, removedById: number, ipAddress?: string) {
-  let treasury = await prisma.treasury.findFirst();
-  
-  if (!treasury) {
-    throw new Error("لا يوجد رصيد في الخزنة للسحب منه");
-  }
-
-  treasury = await prisma.treasury.update({
-    where: { id: treasury.id },
-    data: {
-      vaultUsdBalance: Number(treasury.vaultUsdBalance) - Number(usdAmount),
-      vaultIqdBalance: Number(treasury.vaultIqdBalance) - Number(iqdAmount)
+  return prisma.$transaction(async (tx) => {
+    const treasuries = await tx.$queryRaw<any[]>`SELECT * FROM "treasury" LIMIT 1 FOR UPDATE`;
+    let treasury = treasuries && treasuries.length > 0 ? treasuries[0] : null;
+    
+    if (!treasury) {
+      throw new Error("لا يوجد رصيد في الخزنة الرئيسية للسحب منه");
     }
-  });
 
-  await prisma.auditLog.create({
-    data: {
-      userId: removedById,
-      action: "SETTINGS_UPDATE",
-      details: `سحب أموال من الخزنة الرئيسية: ${usdAmount} USD, ${iqdAmount} IQD`,
-      ipAddress
-    }
-  });
+    treasury = await tx.treasury.update({
+      where: { id: treasury.id },
+      data: {
+        vaultUsdBalance: Number(treasury.vaultUsdBalance) - Number(usdAmount),
+        vaultIqdBalance: Number(treasury.vaultIqdBalance) - Number(iqdAmount)
+      }
+    });
 
-  return treasury;
+    await tx.auditLog.create({
+      data: {
+        userId: removedById,
+        action: "SETTINGS_UPDATE",
+        details: `سحب أموال من الخزنة الرئيسية: ${usdAmount} USD, ${iqdAmount} IQD`,
+        ipAddress
+      }
+    });
+
+    return treasury;
+  });
 }
 
 export async function getDashboardSummary() {
