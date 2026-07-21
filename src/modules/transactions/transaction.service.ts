@@ -271,26 +271,73 @@ export async function deleteTransaction(id: number, deletedById: number, ipAddre
     if (!treasury) throw ApiError.internal('لا يوجد سجل خزينة');
 
     // عكس التأثير على الخزينة
-    let newUsdBalance: number;
-    let newIqdBalance: number;
+    let newUsdBalance = Number(treasury.usdBalance);
+    let newIqdBalance = Number(treasury.iqdBalance);
+    let vaultUsdBalance = Number(treasury.vaultUsdBalance);
+    let vaultIqdBalance = Number(treasury.vaultIqdBalance);
+    let usdDebt = Number(treasury.usdDebt);
+    let iqdDebt = Number(treasury.iqdDebt);
+
+    const txUsdAmount = Number(transaction.usdAmount);
+    const txIqdAmount = Number(transaction.iqdAmount);
 
     if (transaction.type === "BUY") {
-      newUsdBalance = Number(treasury.usdBalance) - Number(transaction.usdAmount);
-      newIqdBalance = Number(treasury.iqdBalance) + Number(transaction.iqdAmount);
-    } else {
-      newUsdBalance = Number(treasury.usdBalance) + Number(transaction.usdAmount);
-      newIqdBalance = Number(treasury.iqdBalance) - Number(transaction.iqdAmount);
-    }
+      // Reversing a BUY: We lose USD, we gain IQD
+      
+      // 1. Lose USD
+      if (newUsdBalance >= txUsdAmount) {
+        newUsdBalance -= txUsdAmount;
+      } else {
+        const shortfall = txUsdAmount - newUsdBalance;
+        newUsdBalance = 0;
+        vaultUsdBalance -= shortfall;
+        usdDebt += shortfall;
+      }
 
-    if (newUsdBalance < 0 || newIqdBalance < 0) {
-      throw ApiError.badRequest(
-        'لا يمكن حذف هذه العملية لأن ذلك سيؤدي إلى رصيد سالب في الخزينة (توجد عمليات لاحقة تعتمد عليها)'
-      );
+      // 2. Gain IQD
+      if (iqdDebt > 0) {
+        const payback = Math.min(txIqdAmount, iqdDebt);
+        vaultIqdBalance += payback;
+        iqdDebt -= payback;
+        newIqdBalance += (txIqdAmount - payback);
+      } else {
+        newIqdBalance += txIqdAmount;
+      }
+
+    } else {
+      // Reversing a SELL: We gain USD, we lose IQD
+      
+      // 1. Gain USD
+      if (usdDebt > 0) {
+        const payback = Math.min(txUsdAmount, usdDebt);
+        vaultUsdBalance += payback;
+        usdDebt -= payback;
+        newUsdBalance += (txUsdAmount - payback);
+      } else {
+        newUsdBalance += txUsdAmount;
+      }
+
+      // 2. Lose IQD
+      if (newIqdBalance >= txIqdAmount) {
+        newIqdBalance -= txIqdAmount;
+      } else {
+        const shortfall = txIqdAmount - newIqdBalance;
+        newIqdBalance = 0;
+        vaultIqdBalance -= shortfall;
+        iqdDebt += shortfall;
+      }
     }
 
     await tx.treasury.update({
       where: { id: treasury.id },
-      data: { usdBalance: newUsdBalance, iqdBalance: newIqdBalance },
+      data: { 
+        usdBalance: newUsdBalance, 
+        iqdBalance: newIqdBalance,
+        vaultUsdBalance: vaultUsdBalance,
+        vaultIqdBalance: vaultIqdBalance,
+        usdDebt: usdDebt,
+        iqdDebt: iqdDebt
+      },
     });
 
     // عكس التأثير على سجل الأرباح اليومي
