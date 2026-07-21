@@ -192,10 +192,18 @@
             }
           }
 
+          const rawRate = parseFloat(document.getElementById('buyCustomRate').value);
+          if (rawRate < 50000) {
+            alert('خطأ: سعر الصرف المدخل غير منطقي! يرجى التأكد من كتابة الأصفار كاملة (مثلاً 150000 وليس 1500).');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'تنفيذ عملية الشراء';
+            return;
+          }
+
           const payload = {
             type: 'BUY',
             usdAmount,
-            customRate: parseFloat(document.getElementById('buyCustomRate').value) / 100,
+            customRate: rawRate / 100,
             customerName: document.getElementById('buyCustomerName').value.trim() || undefined,
             notes: document.getElementById('buyNotes').value.trim() || undefined,
           };
@@ -238,10 +246,18 @@
             }
           }
 
+          const rawRate = parseFloat(document.getElementById('sellCustomRate').value);
+          if (rawRate < 50000) {
+            alert('خطأ: سعر الصرف المدخل غير منطقي! يرجى التأكد من كتابة الأصفار كاملة (مثلاً 150000 وليس 1500).');
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'تنفيذ عملية البيع';
+            return;
+          }
+
           const payload = {
             type: 'SELL',
             usdAmount,
-            customRate: parseFloat(document.getElementById('sellCustomRate').value) / 100,
+            customRate: rawRate / 100,
             customerName: document.getElementById('sellCustomerName').value.trim() || undefined,
             notes: document.getElementById('sellNotes').value.trim() || undefined,
           };

@@ -30,6 +30,10 @@ export async function createTransaction(input: CreateTransactionInput, employeeI
       throw ApiError.badRequest('لا يوجد سعر صرف نشط حالياً، يرجى إدخال سعر الصرف لكل 100$ للعملية');
     }
 
+    if (customRate && customRate < 500) {
+      throw ApiError.badRequest('سعر الصرف المدخل غير منطقي! يرجى التأكد من كتابة الأصفار كاملة (مثلاً 150000 وليس 1500).');
+    }
+
     // 2) جلب سجل الخزينة (نفترض سجل واحد فقط في هذا النظام)
     let treasury = await tx.treasury.findFirst();
     if (!treasury) {
