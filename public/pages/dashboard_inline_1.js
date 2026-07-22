@@ -127,13 +127,7 @@
             <button class="btn btn-outline" style="border-color: #e74c3c; color: #e74c3c;" onclick="document.getElementById('removeFundsModal').classList.add('show')">
               - سحب من الصندوق
             </button>
-            <div style="width: 2px; background: #ddd; margin: 0 10px;"></div>
-            <button class="btn btn-primary" style="background: #8e44ad; border-color: #8e44ad;" onclick="document.getElementById('addVaultModal').classList.add('show')">
-              + إيداع في الخزنة
-            </button>
-            <button class="btn btn-outline" style="border-color: #8e44ad; color: #8e44ad;" onclick="document.getElementById('removeVaultModal').classList.add('show')">
-              - سحب من الخزنة
-            </button>
+
           </div>
 
           <!-- Add Funds Modal (Active Treasury) -->
