@@ -137,6 +137,7 @@
             ` : ''}
           </div>
 
+          ${me.role === 'ADMIN' ? `
           <!-- Add Funds Modal (Active Treasury) -->
           <div class="modal-overlay" id="addFundsModal">
             <div class="modal">
