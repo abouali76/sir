@@ -81,71 +81,6 @@ export async function removeFunds(usdAmount: number, iqdAmount: number, removedB
   });
 }
 
-export async function addVaultFunds(usdAmount: number, iqdAmount: number, addedById: number, ipAddress?: string) {
-  return prisma.$transaction(async (tx) => {
-    const treasuries = await tx.$queryRaw<any[]>`SELECT * FROM "treasury" LIMIT 1 FOR UPDATE`;
-    let treasury = treasuries && treasuries.length > 0 ? treasuries[0] : null;
-    
-    if (!treasury) {
-      treasury = await tx.treasury.create({
-        data: {
-          usdBalance: 0, iqdBalance: 0,
-          vaultUsdBalance: usdAmount, vaultIqdBalance: iqdAmount,
-          avgCostPrice: 0
-        }
-      });
-    } else {
-      treasury = await tx.treasury.update({
-        where: { id: treasury.id },
-        data: {
-          vaultUsdBalance: Number(treasury.vaultUsdBalance) + Number(usdAmount),
-          vaultIqdBalance: Number(treasury.vaultIqdBalance) + Number(iqdAmount)
-        }
-      });
-    }
-
-    await tx.auditLog.create({
-      data: {
-        userId: addedById,
-        action: "SETTINGS_UPDATE",
-        details: `إضافة أموال للخزنة الرئيسية: ${usdAmount} USD, ${iqdAmount} IQD`,
-        ipAddress
-      }
-    });
-
-    return treasury;
-  });
-}
-
-export async function removeVaultFunds(usdAmount: number, iqdAmount: number, removedById: number, ipAddress?: string) {
-  return prisma.$transaction(async (tx) => {
-    const treasuries = await tx.$queryRaw<any[]>`SELECT * FROM "treasury" LIMIT 1 FOR UPDATE`;
-    let treasury = treasuries && treasuries.length > 0 ? treasuries[0] : null;
-    
-    if (!treasury) {
-      throw new Error("لا يوجد رصيد في الخزنة الرئيسية للسحب منه");
-    }
-
-    treasury = await tx.treasury.update({
-      where: { id: treasury.id },
-      data: {
-        vaultUsdBalance: Number(treasury.vaultUsdBalance) - Number(usdAmount),
-        vaultIqdBalance: Number(treasury.vaultIqdBalance) - Number(iqdAmount)
-      }
-    });
-
-    await tx.auditLog.create({
-      data: {
-        userId: removedById,
-        action: "SETTINGS_UPDATE",
-        details: `سحب أموال من الخزنة الرئيسية: ${usdAmount} USD, ${iqdAmount} IQD`,
-        ipAddress
-      }
-    });
-
-    return treasury;
-  });
-}
 
 export async function getDashboardSummary() {
   const today = new Date();
@@ -211,10 +146,10 @@ export async function getDashboardSummary() {
     todaySellUsd: todaySellAgg?._sum.usdAmount ?? 0,
     usdBalance: treasury?.usdBalance ?? 0,
     iqdBalance: treasury?.iqdBalance ?? 0,
-    vaultUsdBalance: treasury?.vaultUsdBalance ?? 0,
-    vaultIqdBalance: treasury?.vaultIqdBalance ?? 0,
-    usdDebt: treasury?.usdDebt ?? 0,
-    iqdDebt: treasury?.iqdDebt ?? 0,
+    vaultUsdBalance: 0,
+    vaultIqdBalance: 0,
+    usdDebt: 0,
+    iqdDebt: 0,
     avgCostPrice: treasury?.avgCostPrice ?? 0,
     lastTransactions,
   };

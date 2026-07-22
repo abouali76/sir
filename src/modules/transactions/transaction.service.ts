@@ -61,34 +61,10 @@ export async function createTransaction(input: CreateTransactionInput, employeeI
     
     const iqdAmount = Math.round(unitPrice * usdAmount * 100) / 100;
 
-    let vaultUsdBalance = Number(treasury.vaultUsdBalance);
-    let vaultIqdBalance = Number(treasury.vaultIqdBalance);
-    let usdDebt = Number(treasury.usdDebt || 0);
-    let iqdDebt = Number(treasury.iqdDebt || 0);
-
     if (type === "BUY") {
       // شراء دولار: نعطي دينار، نستلم دولار
-      
-      // 1. معالجة سحب الدينار (Outgoing)
-      const currentIqd = Number(treasury.iqdBalance);
-      if (currentIqd >= iqdAmount) {
-        newIqdBalance = currentIqd - iqdAmount;
-      } else {
-        newIqdBalance = 0;
-        const shortfall = iqdAmount - currentIqd;
-        vaultIqdBalance -= shortfall;
-        iqdDebt += shortfall;
-      }
-
-      // 2. معالجة استلام الدولار (Incoming)
-      if (usdDebt > 0) {
-        const payback = Math.min(usdAmount, usdDebt);
-        vaultUsdBalance += payback;
-        usdDebt -= payback;
-        newUsdBalance = Number(treasury.usdBalance) + (usdAmount - payback);
-      } else {
-        newUsdBalance = Number(treasury.usdBalance) + usdAmount;
-      }
+      newIqdBalance = Number(treasury.iqdBalance) - iqdAmount;
+      newUsdBalance = Number(treasury.usdBalance) + usdAmount;
 
       // Calculate new weighted average cost
       newAvgCost = calculateNewWeightedAverage(
@@ -99,32 +75,13 @@ export async function createTransaction(input: CreateTransactionInput, employeeI
       );
     } else {
       // بيع دولار: نعطي دولار، نستلم دينار
-      
-      // 1. معالجة سحب الدولار (Outgoing)
-      const currentUsd = Number(treasury.usdBalance);
-      if (currentUsd >= usdAmount) {
-        newUsdBalance = currentUsd - usdAmount;
-      } else {
-        newUsdBalance = 0;
-        const shortfall = usdAmount - currentUsd;
-        vaultUsdBalance -= shortfall;
-        usdDebt += shortfall;
-      }
+      newUsdBalance = Number(treasury.usdBalance) - usdAmount;
 
       costBasisAvg = Number(treasury.avgCostPrice);
       profit = calculateSellProfit(unitPrice, costBasisAvg, usdAmount);
       
       const capitalIqd = iqdAmount - profit;
-
-      // 2. معالجة استلام الدينار (Incoming) - يضاف رأس المال فقط
-      if (iqdDebt > 0) {
-        const payback = Math.min(capitalIqd, iqdDebt);
-        vaultIqdBalance += payback;
-        iqdDebt -= payback;
-        newIqdBalance = Number(treasury.iqdBalance) + (capitalIqd - payback);
-      } else {
-        newIqdBalance = Number(treasury.iqdBalance) + capitalIqd;
-      }
+      newIqdBalance = Number(treasury.iqdBalance) + capitalIqd;
     }
 
     // 4) تحديث الخزينة
@@ -133,10 +90,6 @@ export async function createTransaction(input: CreateTransactionInput, employeeI
       data: {
         usdBalance: newUsdBalance,
         iqdBalance: newIqdBalance,
-        vaultUsdBalance: vaultUsdBalance,
-        vaultIqdBalance: vaultIqdBalance,
-        usdDebt: usdDebt,
-        iqdDebt: iqdDebt,
         avgCostPrice: newAvgCost,
       },
     });
@@ -275,71 +228,26 @@ export async function deleteTransaction(id: number, deletedById: number, ipAddre
     // عكس التأثير على الخزينة
     let newUsdBalance = Number(treasury.usdBalance);
     let newIqdBalance = Number(treasury.iqdBalance);
-    let vaultUsdBalance = Number(treasury.vaultUsdBalance);
-    let vaultIqdBalance = Number(treasury.vaultIqdBalance);
-    let usdDebt = Number(treasury.usdDebt);
-    let iqdDebt = Number(treasury.iqdDebt);
-    let newAvgCost = Number(treasury.avgCostPrice);
 
     const txUsdAmount = Number(transaction.usdAmount);
     const txIqdAmount = Number(transaction.iqdAmount);
 
     if (transaction.type === "BUY") {
       // Reversing a BUY: We lose USD, we gain IQD
-      
-      // 1. Lose USD
-      if (newUsdBalance >= txUsdAmount) {
-        newUsdBalance -= txUsdAmount;
-      } else {
-        const shortfall = txUsdAmount - newUsdBalance;
-        newUsdBalance = 0;
-        vaultUsdBalance -= shortfall;
-        usdDebt += shortfall;
-      }
-
-      // 2. Gain IQD
-      if (iqdDebt > 0) {
-        const payback = Math.min(txIqdAmount, iqdDebt);
-        vaultIqdBalance += payback;
-        iqdDebt -= payback;
-        newIqdBalance += (txIqdAmount - payback);
-      } else {
-        newIqdBalance += txIqdAmount;
-      }
-
+      newUsdBalance -= txUsdAmount;
+      newIqdBalance += txIqdAmount;
     } else {
-      // Reversing a SELL: We gain USD, we lose IQD
-      
-      // 1. Gain USD
-      if (usdDebt > 0) {
-        const payback = Math.min(txUsdAmount, usdDebt);
-        vaultUsdBalance += payback;
-        usdDebt -= payback;
-        newUsdBalance += (txUsdAmount - payback);
-      } else {
-        newUsdBalance += txUsdAmount;
-      }
-
-      // 2. Lose IQD
-      if (newIqdBalance >= txIqdAmount) {
-        newIqdBalance -= txIqdAmount;
-      } else {
-        const shortfall = txIqdAmount - newIqdBalance;
-        newIqdBalance = 0;
-        vaultIqdBalance -= shortfall;
-        iqdDebt += shortfall;
-      }
+      // Reversing a SELL: We gain USD, we lose IQD (capital only)
+      newUsdBalance += txUsdAmount;
+      const capitalIqd = txIqdAmount - Number(transaction.profit || 0);
+      newIqdBalance -= capitalIqd;
     }
 
     await tx.treasury.update({
       where: { id: treasury.id },
       data: { 
         usdBalance: newUsdBalance, 
-        iqdBalance: newIqdBalance,
-        vaultUsdBalance: vaultUsdBalance,
-        vaultIqdBalance: vaultIqdBalance,
-        usdDebt: usdDebt,
-        iqdDebt: iqdDebt
+        iqdBalance: newIqdBalance
       },
     });
 

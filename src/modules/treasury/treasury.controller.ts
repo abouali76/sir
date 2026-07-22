@@ -24,15 +24,3 @@ export const removeFunds = catchAsync(async (req: Request, res: Response) => {
   const balance = await treasuryService.removeFunds(Number(usdAmount || 0), Number(iqdAmount || 0), req.user!.id, req.ip);
   sendSuccess(res, balance, 'تم سحب الأموال من الخزينة بنجاح');
 });
-
-export const addVaultFunds = catchAsync(async (req: Request, res: Response) => {
-  const { usdAmount, iqdAmount } = req.body;
-  const balance = await treasuryService.addVaultFunds(Number(usdAmount || 0), Number(iqdAmount || 0), req.user!.id, req.ip);
-  sendSuccess(res, balance, 'تمت إضافة الأموال للخزنة الرئيسية بنجاح');
-});
-
-export const removeVaultFunds = catchAsync(async (req: Request, res: Response) => {
-  const { usdAmount, iqdAmount } = req.body;
-  const balance = await treasuryService.removeVaultFunds(Number(usdAmount || 0), Number(iqdAmount || 0), req.user!.id, req.ip);
-  sendSuccess(res, balance, 'تم سحب الأموال من الخزنة الرئيسية بنجاح');
-});
