@@ -99,22 +99,7 @@
               ${data.iqdDebt > 0 ? `<div style="font-size: 12px; color: #e74c3c; font-weight: bold; margin-top: 8px;">مطلوب للخزنة: ${formatMoney(data.iqdDebt)} د.ع</div>` : ''}
             </div>
 
-            ${me.role === 'ADMIN' ? `
-            <div class="stat-card" style="border-top-color: #8e44ad;">
-              <div class="label">رصيد الخزنة الرئيسية (دولار)</div>
-              <div class="value" style="font-size: 24px;">$${formatMoney(data.vaultUsdBalance || 0)}</div>
-              <div class="sub" style="font-size: 13px; font-weight: bold; margin-top: 6px; color: #8e44ad;">
-                ${tafqeet(data.vaultUsdBalance || 0)} دولار أمريكي
-              </div>
-            </div>
-            <div class="stat-card" style="border-top-color: #8e44ad;">
-              <div class="label">رصيد الخزنة الرئيسية (دينار)</div>
-              <div class="value" style="font-size: 24px;">${formatMoney(data.vaultIqdBalance || 0)}</div>
-              <div class="sub" style="font-size: 13px; font-weight: bold; margin-top: 6px; color: #8e44ad;">
-                ${tafqeet(data.vaultIqdBalance || 0)} دينار عراقي
-              </div>
-            </div>
-            ` : ''}
+
 
             ${me.role === 'ADMIN' ? `
             <div class="stat-card danger">
