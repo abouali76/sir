@@ -111,20 +111,20 @@ export async function createTransaction(input: CreateTransactionInput, employeeI
         usdDebt += shortfall;
       }
 
-      // 2. معالجة استلام الدينار (Incoming)
+      costBasisAvg = Number(treasury.avgCostPrice);
+      profit = calculateSellProfit(unitPrice, costBasisAvg, usdAmount);
+      
+      const capitalIqd = iqdAmount - profit;
+
+      // 2. معالجة استلام الدينار (Incoming) - يضاف رأس المال فقط
       if (iqdDebt > 0) {
-        const payback = Math.min(iqdAmount, iqdDebt);
+        const payback = Math.min(capitalIqd, iqdDebt);
         vaultIqdBalance += payback;
         iqdDebt -= payback;
-        newIqdBalance = Number(treasury.iqdBalance) + (iqdAmount - payback);
+        newIqdBalance = Number(treasury.iqdBalance) + (capitalIqd - payback);
       } else {
-        newIqdBalance = Number(treasury.iqdBalance) + iqdAmount;
+        newIqdBalance = Number(treasury.iqdBalance) + capitalIqd;
       }
-
-      costBasisAvg = Number(treasury.avgCostPrice);
-      
-      // Calculate profit using the weighted average cost
-      profit = calculateSellProfit(unitPrice, costBasisAvg, usdAmount);
     }
 
     // 4) تحديث الخزينة
