@@ -134,6 +134,9 @@
             <button class="btn btn-outline" style="border-color: #e74c3c; color: #e74c3c;" onclick="document.getElementById('removeFundsModal').classList.add('show')">
               - سحب من الصندوق
             </button>
+            <button class="btn btn-outline" style="border-color: #f39c12; color: #f39c12;" onclick="if(confirm('هل أنت متأكد من رغبتك بتصفير عدادات اليومية (الأرباح، عمليات البيع والشراء) وبدء يومية جديدة؟')) window.closeShift()">
+              تصفير يومية العمل
+            </button>
             ` : ''}
           </div>
 
@@ -419,6 +422,16 @@
           });
         }
       }
+
+      window.closeShift = async function() {
+        try {
+          await api.post('/treasury/close-shift', {});
+          alert('تم إغلاق اليومية وتصفير العدادات بنجاح!');
+          window.location.reload();
+        } catch (err) {
+          alert(err.message || 'حدث خطأ أثناء تصفير اليومية');
+        }
+      };
 
       try {
         // Stale-While-Revalidate

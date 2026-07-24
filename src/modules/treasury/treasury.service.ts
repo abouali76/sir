@@ -81,10 +81,42 @@ export async function removeFunds(usdAmount: number, iqdAmount: number, removedB
   });
 }
 
+export async function closeShift(userId: number, ipAddress?: string) {
+  return prisma.$transaction(async (tx) => {
+    const now = new Date();
+    
+    // Update or create the setting
+    await tx.setting.upsert({
+      where: { key: 'CURRENT_SHIFT_START' },
+      update: { value: now.toISOString() },
+      create: { key: 'CURRENT_SHIFT_START', value: now.toISOString() }
+    });
+
+    // Log the action
+    await tx.auditLog.create({
+      data: {
+        userId,
+        action: "SETTINGS_UPDATE",
+        details: "إغلاق اليومية وتصفير العدادات",
+        ipAddress
+      }
+    });
+
+    return { success: true, message: 'تم إغلاق اليومية بنجاح' };
+  });
+}
 
 export async function getDashboardSummary() {
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
+  const shiftSetting = await prisma.setting.findUnique({
+    where: { key: 'CURRENT_SHIFT_START' }
+  });
+
+  let today = new Date();
+  if (shiftSetting && shiftSetting.value) {
+    today = new Date(shiftSetting.value);
+  } else {
+    today.setUTCHours(0, 0, 0, 0);
+  }
 
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
 

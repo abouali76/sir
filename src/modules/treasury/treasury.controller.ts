@@ -24,3 +24,8 @@ export const removeFunds = catchAsync(async (req: Request, res: Response) => {
   const balance = await treasuryService.removeFunds(Number(usdAmount || 0), Number(iqdAmount || 0), req.user!.id, req.ip);
   sendSuccess(res, balance, 'تم سحب الأموال من الخزينة بنجاح');
 });
+
+export const closeShift = catchAsync(async (req: Request, res: Response) => {
+  const result = await treasuryService.closeShift(req.user!.id, req.ip);
+  sendSuccess(res, result, result.message);
+});

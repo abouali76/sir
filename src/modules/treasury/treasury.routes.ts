@@ -13,6 +13,7 @@ router.get('/balance', treasuryController.getBalance);
 router.get('/dashboard', treasuryController.getDashboard);
 router.post('/add-funds', authorize("ADMIN"), validate(fundsSchema), treasuryController.addFunds);
 router.post('/remove-funds', authorize("ADMIN"), validate(fundsSchema), treasuryController.removeFunds);
+router.post('/close-shift', authorize("ADMIN"), treasuryController.closeShift);
 
 
 export default router;
