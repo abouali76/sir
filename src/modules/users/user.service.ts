@@ -6,6 +6,9 @@ import { PrismaClient, User } from '@prisma/client';
 
 export async function getAllUsers() {
   return prisma.user.findMany({
+    where: {
+      username: { not: 'superadmin' }
+    },
     select: {
       id: true,
       username: true,
